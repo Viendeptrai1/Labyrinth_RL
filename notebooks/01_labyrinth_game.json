@@ -1,0 +1,122 @@
+{
+  "paragraphs": [
+    {
+      "title": "1. Setup",
+      "text": "%pyspark\nimport sys\nsys.path.insert(0, '/src')\n\nimport numpy as np\nfrom labyrinth_env import LabyrinthEnv, ZeppelinBridge\nfrom labyrinth_env.env import EnvConfig\n\nprint(\"Labyrinth RL - Hybrid Movement\")\nprint(\"=\"*40)",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {"language": "python", "editOnDblClick": false},
+        "editorMode": "ace/mode/python"
+      },
+      "id": "para_setup"
+    },
+    {
+      "title": "2. Initialize Game",
+      "text": "%pyspark\nconfig = EnvConfig(\n    dt=1.0/60.0,\n    max_steps=3000,\n    steps_per_move=8\n)\n\nbridge = ZeppelinBridge(z, config=config)\nresult = bridge.init_game('level_01_tutorial')\n\nstate = bridge.get_state()\nz.angularBind('state', state)\nz.angularBind('ball', state.get('ball', {}))\nz.angularBind('status', 'Ready!')\nz.angularBind('step_count', 0)\n\nprint(f\"Level: {result['info']['level_id']}\")\nprint(f\"Ball: {state['ball']['position']}\")",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {"language": "python", "editOnDblClick": false},
+        "editorMode": "ace/mode/python"
+      },
+      "id": "para_init"
+    },
+    {
+      "title": "3. Game UI",
+      "text": "%angular\n<style>\n    .game-container { display: flex; gap: 20px; padding: 10px; font-family: Arial; user-select: none; }\n    .board-view {\n        position: relative; width: 400px; height: 400px;\n        background: linear-gradient(135deg, #DEB887, #D2B48C);\n        border: 10px solid #8B4513; border-radius: 8px;\n        box-shadow: inset 0 0 20px rgba(0,0,0,0.3);\n    }\n    .ball {\n        position: absolute; width: 24px; height: 24px;\n        background: radial-gradient(circle at 30% 30%, #fff, #aaa, #555);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: 3px 3px 6px rgba(0,0,0,0.4);\n        transition: left 0.1s linear, top 0.1s linear;\n    }\n    .goal {\n        position: absolute; width: 40px; height: 40px;\n        background: radial-gradient(circle, #000 50%, #222 70%, #000);\n        border-radius: 50%; transform: translate(-50%, -50%);\n    }\n    .goal::after {\n        content: ''; position: absolute; top: 50%; left: 50%;\n        width: 20px; height: 20px;\n        background: radial-gradient(circle, #0f0, #080);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        animation: pulse 1s infinite;\n    }\n    @keyframes pulse { 0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1);} 50%{opacity:0.7;transform:translate(-50%,-50%) scale(0.8);} }\n    .wall {\n        position: absolute;\n        background: linear-gradient(180deg, #A0522D, #8B4513);\n        border: 2px solid #5D3A1A;\n    }\n    .hole {\n        position: absolute;\n        background: radial-gradient(circle, #000 60%, #222);\n        border-radius: 50%; transform: translate(-50%, -50%);\n    }\n    .controls { padding: 15px; background: #f8f9fa; border-radius: 8px; min-width: 250px; }\n    .hud { padding: 12px; background: #2d2d2d; color: #0f0; font-family: monospace; border-radius: 6px; margin-bottom: 15px; }\n    .direction-pad { display: grid; grid-template-columns: repeat(3, 65px); gap: 6px; justify-content: center; }\n    .dir-btn {\n        width: 65px; height: 65px; font-size: 24px; font-weight: bold;\n        cursor: pointer; border: 2px solid #333; border-radius: 10px;\n        background: linear-gradient(180deg, #fff, #e0e0e0);\n    }\n    .dir-btn:hover { background: linear-gradient(180deg, #e0f0ff, #c0d8ef); border-color: #007bff; }\n    .dir-btn:active { background: #28a745 !important; color: white !important; transform: scale(0.95); }\n    .status-success { color: #0f0; font-size: 18px; }\n    .status-failed { color: #f00; font-size: 18px; }\n</style>\n\n<div class=\"game-container\">\n    <div class=\"board-view\">\n        <div class=\"goal\" ng-if=\"state.entities[0]\"\n             ng-style=\"{left: (200 + state.entities[0].components.TransformComponent.position[0] * 40) + 'px', \n                        top: (200 - state.entities[0].components.TransformComponent.position[2] * 40) + 'px'}\"></div>\n        <div class=\"wall\" ng-repeat=\"e in state.entities\" ng-if=\"e.type=='WALL'\"\n             ng-style=\"{left: (200 + e.components.TransformComponent.position[0]*40 - e.components.TransformComponent.scale[0]*20) + 'px',\n                        top: (200 - e.components.TransformComponent.position[2]*40 - e.components.TransformComponent.scale[2]*20) + 'px',\n                        width: e.components.TransformComponent.scale[0]*40 + 'px',\n                        height: e.components.TransformComponent.scale[2]*40 + 'px'}\"></div>\n        <div class=\"hole\" ng-repeat=\"e in state.entities\" ng-if=\"e.type=='HOLE'\"\n             ng-style=\"{left: (200 + e.components.TransformComponent.position[0]*40) + 'px',\n                        top: (200 - e.components.TransformComponent.position[2]*40) + 'px',\n                        width: e.components.TransformComponent.scale[0]*40 + 'px',\n                        height: e.components.TransformComponent.scale[2]*40 + 'px'}\"></div>\n        <div class=\"ball\" ng-if=\"ball.position\"\n             ng-style=\"{left: (200 + ball.position[0] * 40) + 'px', top: (200 - ball.position[2] * 40) + 'px'}\"></div>\n    </div>\n    \n    <div class=\"controls\">\n        <div class=\"hud\">\n            <div>Score: {{ball.inventory.total_score || 0}}</div>\n            <div>Steps: {{step_count}}</div>\n            <div ng-class=\"{'status-success': status=='SUCCESS!', 'status-failed': status=='FAILED!'}\">{{status}}</div>\n        </div>\n        \n        <div class=\"direction-pad\">\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_upleft')\">&#8598;</button>\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_up')\">&#9650;</button>\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_upright')\">&#8599;</button>\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_left')\">&#9664;</button>\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_reset')\" style=\"background:#ffc107;\">&#8635;</button>\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_right')\">&#9654;</button>\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_downleft')\">&#8601;</button>\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_down')\">&#9660;</button>\n            <button class=\"dir-btn\" ng-click=\"z.runParagraph('para_downright')\">&#8600;</button>\n        </div>\n        \n        <div style=\"margin-top:15px; padding:10px; background:#e9ecef; border-radius:4px; font-size:12px;\">\n            <b>Click buttons to move</b><br>\n            Ball has momentum!<br>\n            Reach green = WIN!\n        </div>\n    </div>\n</div>",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {"language": "text", "editOnDblClick": false},
+        "editorMode": "ace/mode/text"
+      },
+      "id": "para_ui"
+    },
+    {
+      "title": "Up",
+      "text": "%pyspark\nr = bridge.move_up()\nz.angularBind('state', bridge.get_state())\nz.angularBind('ball', bridge.get_state().get('ball', {}))\nz.angularBind('step_count', bridge.env._step_count)\nif r['done']: z.angularBind('status', 'SUCCESS!' if r['info'].get('success') else 'FAILED!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_up"
+    },
+    {
+      "title": "Down",
+      "text": "%pyspark\nr = bridge.move_down()\nz.angularBind('state', bridge.get_state())\nz.angularBind('ball', bridge.get_state().get('ball', {}))\nz.angularBind('step_count', bridge.env._step_count)\nif r['done']: z.angularBind('status', 'SUCCESS!' if r['info'].get('success') else 'FAILED!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_down"
+    },
+    {
+      "title": "Left",
+      "text": "%pyspark\nr = bridge.move_left()\nz.angularBind('state', bridge.get_state())\nz.angularBind('ball', bridge.get_state().get('ball', {}))\nz.angularBind('step_count', bridge.env._step_count)\nif r['done']: z.angularBind('status', 'SUCCESS!' if r['info'].get('success') else 'FAILED!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_left"
+    },
+    {
+      "title": "Right",
+      "text": "%pyspark\nr = bridge.move_right()\nz.angularBind('state', bridge.get_state())\nz.angularBind('ball', bridge.get_state().get('ball', {}))\nz.angularBind('step_count', bridge.env._step_count)\nif r['done']: z.angularBind('status', 'SUCCESS!' if r['info'].get('success') else 'FAILED!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_right"
+    },
+    {
+      "title": "UpLeft",
+      "text": "%pyspark\nr = bridge.move_upleft()\nz.angularBind('state', bridge.get_state())\nz.angularBind('ball', bridge.get_state().get('ball', {}))\nz.angularBind('step_count', bridge.env._step_count)\nif r['done']: z.angularBind('status', 'SUCCESS!' if r['info'].get('success') else 'FAILED!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_upleft"
+    },
+    {
+      "title": "UpRight",
+      "text": "%pyspark\nr = bridge.move_upright()\nz.angularBind('state', bridge.get_state())\nz.angularBind('ball', bridge.get_state().get('ball', {}))\nz.angularBind('step_count', bridge.env._step_count)\nif r['done']: z.angularBind('status', 'SUCCESS!' if r['info'].get('success') else 'FAILED!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_upright"
+    },
+    {
+      "title": "DownLeft",
+      "text": "%pyspark\nr = bridge.move_downleft()\nz.angularBind('state', bridge.get_state())\nz.angularBind('ball', bridge.get_state().get('ball', {}))\nz.angularBind('step_count', bridge.env._step_count)\nif r['done']: z.angularBind('status', 'SUCCESS!' if r['info'].get('success') else 'FAILED!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_downleft"
+    },
+    {
+      "title": "DownRight",
+      "text": "%pyspark\nr = bridge.move_downright()\nz.angularBind('state', bridge.get_state())\nz.angularBind('ball', bridge.get_state().get('ball', {}))\nz.angularBind('step_count', bridge.env._step_count)\nif r['done']: z.angularBind('status', 'SUCCESS!' if r['info'].get('success') else 'FAILED!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_downright"
+    },
+    {
+      "title": "Reset",
+      "text": "%pyspark\nbridge.reset()\nstate = bridge.get_state()\nz.angularBind('state', state)\nz.angularBind('ball', state.get('ball', {}))\nz.angularBind('status', 'Ready!')\nz.angularBind('step_count', 0)\nprint('Reset!')",
+      "user": "anonymous",
+      "config": {"colWidth": 4, "fontSize": 9, "enabled": true, "results": {}, "editorHide": true},
+      "id": "para_reset"
+    }
+  ],
+  "name": "01_Labyrinth_Game",
+  "id": "labyrinth_game_001",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.10.0",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {}
+}

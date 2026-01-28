@@ -1,0 +1,37 @@
+{
+  "id": "level_01_tutorial",
+  "name": "Tutorial",
+  "difficulty": 1,
+  "description": "Đưa bi vào lỗ. Dùng WASD hoặc phím mũi tên để nghiêng bàn.",
+  "hints": ["Nghiêng bàn sang phải để bi lăn về phía goal"],
+  "board": {
+    "width": 8.0,
+    "height": 8.0,
+    "max_tilt": 0.15
+  },
+  "ball": {
+    "start": [-3.0, 0.0],
+    "radius": 0.3
+  },
+  "goal": {
+    "position": [3.0, 0.0],
+    "radius": 0.6,
+    "reward": 1000.0
+  },
+  "walls": [
+    {"position": [0, -3], "size": [4.0, 0.5, 0.2]},
+    {"position": [0, 3], "size": [4.0, 0.5, 0.2]}
+  ],
+  "holes": [],
+  "coins": [],
+  "keys": [],
+  "locks": [],
+  "teleports": [],
+  "time_limit": 0,
+  "rewards": {
+    "goal": 1000.0,
+    "hole_penalty": -100.0,
+    "coin_value": 100,
+    "time_penalty": -0.1
+  }
+}

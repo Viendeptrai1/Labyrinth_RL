@@ -1,0 +1,145 @@
+{
+  "paragraphs": [
+    {
+      "title": "1. Setup - Import Libraries",
+      "text": "%pyspark\nimport sys\nsys.path.insert(0, '/src')\n\nimport numpy as np\nimport time\nfrom collections import deque\n\nfrom labyrinth_env import LabyrinthEnv, ZeppelinBridge\nfrom labyrinth_env.env import EnvConfig\nfrom rl.agents.sac import SACAgent, SACConfig\nfrom rl.train import Trainer, TrainConfig\n\nprint(\"SAC Training for Labyrinth RL\")\nprint(\"=\"*40)",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/python"
+      }
+    },
+    {
+      "title": "2. Initialize Environment and Agent",
+      "text": "%pyspark\n# Environment config\nenv_config = EnvConfig(\n    dt=1.0/60.0,\n    max_steps=1500,\n    max_tilt=0.15,\n    distance_reward_scale=10.0  # Dense reward\n)\n\n# Create environment\nenv = LabyrinthEnv(config=env_config)\nenv.seed(42)\n\n# SAC config\nsac_config = SACConfig(\n    hidden_dim=256,\n    num_hidden_layers=2,\n    actor_lr=3e-4,\n    critic_lr=3e-4,\n    alpha_lr=3e-4,\n    gamma=0.99,\n    tau=0.005,\n    batch_size=256,\n    buffer_size=100000,\n    warmup_steps=1000\n)\n\n# Create agent\nagent = SACAgent(\n    state_dim=env.observation_dim,\n    action_dim=env.action_dim,\n    config=sac_config,\n    device='cpu'\n)\n\nprint(f\"State dim: {env.observation_dim}\")\nprint(f\"Action dim: {env.action_dim}\")\nprint(f\"Max steps per episode: {env_config.max_steps}\")",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/python"
+      }
+    },
+    {
+      "title": "3. Training Metrics Visualization",
+      "text": "%angular\n<style>\n    .train-container {\n        display: flex;\n        gap: 20px;\n        flex-wrap: wrap;\n    }\n    .chart-panel {\n        width: 500px;\n        height: 300px;\n        border: 1px solid #ddd;\n        border-radius: 8px;\n        padding: 10px;\n    }\n    .metrics-panel {\n        width: 300px;\n        padding: 15px;\n        background: #f8f9fa;\n        border-radius: 8px;\n    }\n    .metric-item {\n        margin-bottom: 10px;\n        padding: 8px;\n        background: white;\n        border-radius: 4px;\n    }\n    .metric-label {\n        font-weight: bold;\n        color: #666;\n        font-size: 12px;\n    }\n    .metric-value {\n        font-size: 24px;\n        font-family: monospace;\n    }\n    .progress-bar {\n        height: 20px;\n        background: #e9ecef;\n        border-radius: 4px;\n        overflow: hidden;\n        margin-top: 5px;\n    }\n    .progress-fill {\n        height: 100%;\n        background: #28a745;\n        transition: width 0.3s;\n    }\n    canvas {\n        width: 100% !important;\n        height: 250px !important;\n    }\n</style>\n\n<script src=\"https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js\"></script>\n\n<div class=\"train-container\" ng-controller=\"TrainController\">\n    <!-- Reward Chart -->\n    <div class=\"chart-panel\">\n        <h4>Episode Rewards</h4>\n        <canvas id=\"reward-chart\"></canvas>\n    </div>\n    \n    <!-- Loss Chart -->\n    <div class=\"chart-panel\">\n        <h4>Training Loss</h4>\n        <canvas id=\"loss-chart\"></canvas>\n    </div>\n    \n    <!-- Metrics Panel -->\n    <div class=\"metrics-panel\">\n        <h4>Training Metrics</h4>\n        \n        <div class=\"metric-item\">\n            <div class=\"metric-label\">Episode</div>\n            <div class=\"metric-value\">{{trainMetrics.episode || 0}}</div>\n        </div>\n        \n        <div class=\"metric-item\">\n            <div class=\"metric-label\">Total Steps</div>\n            <div class=\"metric-value\">{{trainMetrics.total_steps || 0}}</div>\n        </div>\n        \n        <div class=\"metric-item\">\n            <div class=\"metric-label\">Avg Reward (100 ep)</div>\n            <div class=\"metric-value\" ng-style=\"{color: trainMetrics.avg_reward > 0 ? 'green' : 'red'}\">\n                {{trainMetrics.avg_reward | number:1}}\n            </div>\n        </div>\n        \n        <div class=\"metric-item\">\n            <div class=\"metric-label\">Success Rate</div>\n            <div class=\"metric-value\">{{trainMetrics.success_rate * 100 | number:1}}%</div>\n            <div class=\"progress-bar\">\n                <div class=\"progress-fill\" ng-style=\"{width: (trainMetrics.success_rate * 100) + '%'}\"></div>\n            </div>\n        </div>\n        \n        <div class=\"metric-item\">\n            <div class=\"metric-label\">Actor Loss</div>\n            <div class=\"metric-value\">{{trainMetrics.actor_loss | number:4}}</div>\n        </div>\n        \n        <div class=\"metric-item\">\n            <div class=\"metric-label\">Critic Loss</div>\n            <div class=\"metric-value\">{{trainMetrics.critic_loss | number:4}}</div>\n        </div>\n        \n        <div class=\"metric-item\">\n            <div class=\"metric-label\">Alpha (Entropy)</div>\n            <div class=\"metric-value\">{{trainMetrics.alpha | number:4}}</div>\n        </div>\n    </div>\n</div>\n\n<script>\n(function() {\n    var rewardChart, lossChart;\n    var rewardData = [];\n    var avgRewardData = [];\n    var actorLossData = [];\n    var criticLossData = [];\n    var labels = [];\n    \n    function initCharts() {\n        var rewardCtx = document.getElementById('reward-chart');\n        var lossCtx = document.getElementById('loss-chart');\n        \n        if (!rewardCtx || !lossCtx) return;\n        \n        rewardChart = new Chart(rewardCtx, {\n            type: 'line',\n            data: {\n                labels: labels,\n                datasets: [{\n                    label: 'Episode Reward',\n                    data: rewardData,\n                    borderColor: 'rgba(75, 192, 192, 1)',\n                    backgroundColor: 'rgba(75, 192, 192, 0.2)',\n                    fill: true,\n                    tension: 0.1\n                }, {\n                    label: 'Avg Reward (100)',\n                    data: avgRewardData,\n                    borderColor: 'rgba(255, 99, 132, 1)',\n                    borderWidth: 2,\n                    fill: false\n                }]\n            },\n            options: {\n                responsive: true,\n                scales: {\n                    y: { beginAtZero: false }\n                },\n                animation: { duration: 0 }\n            }\n        });\n        \n        lossChart = new Chart(lossCtx, {\n            type: 'line',\n            data: {\n                labels: labels,\n                datasets: [{\n                    label: 'Actor Loss',\n                    data: actorLossData,\n                    borderColor: 'rgba(54, 162, 235, 1)',\n                    fill: false\n                }, {\n                    label: 'Critic Loss',\n                    data: criticLossData,\n                    borderColor: 'rgba(255, 206, 86, 1)',\n                    fill: false\n                }]\n            },\n            options: {\n                responsive: true,\n                scales: {\n                    y: { beginAtZero: false }\n                },\n                animation: { duration: 0 }\n            }\n        });\n    }\n    \n    function updateCharts(metrics) {\n        if (!metrics || !rewardChart || !lossChart) return;\n        \n        var ep = metrics.episode || labels.length;\n        \n        // Add new data point\n        if (labels.length === 0 || labels[labels.length-1] !== ep) {\n            labels.push(ep);\n            rewardData.push(metrics.episode_reward || 0);\n            avgRewardData.push(metrics.avg_reward || 0);\n            actorLossData.push(metrics.actor_loss || 0);\n            criticLossData.push(metrics.critic_loss || 0);\n            \n            // Keep last 200 points\n            if (labels.length > 200) {\n                labels.shift();\n                rewardData.shift();\n                avgRewardData.shift();\n                actorLossData.shift();\n                criticLossData.shift();\n            }\n            \n            rewardChart.update();\n            lossChart.update();\n        }\n    }\n    \n    // Initialize after DOM ready\n    setTimeout(initCharts, 500);\n    \n    // Angular controller\n    angular.module('zeppelinWebApp').controller('TrainController', \n        ['$scope', function($scope) {\n            $scope.$watch('trainMetrics', function(newMetrics) {\n                if (newMetrics) {\n                    updateCharts(newMetrics);\n                }\n            }, true);\n        }]\n    );\n})();\n</script>",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "text",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/text"
+      }
+    },
+    {
+      "title": "4. Training Loop with Live Visualization",
+      "text": "%pyspark\n# Training với live metrics binding\ndef train_with_visualization(num_episodes=500, render_every=50):\n    episode_rewards = deque(maxlen=100)\n    episode_lengths = deque(maxlen=100)\n    successes = deque(maxlen=100)\n    \n    for episode in range(num_episodes):\n        obs, info = env.reset(level_id='level_01_tutorial')\n        episode_reward = 0\n        episode_length = 0\n        done = False\n        \n        while not done:\n            # Select action\n            action = agent.select_action(obs)\n            \n            # Step environment\n            next_obs, reward, terminated, truncated, info = env.step(action)\n            done = terminated or truncated\n            \n            # Store transition\n            agent.store_transition(obs, action, reward, next_obs, done)\n            \n            # Update agent\n            train_metrics = agent.update()\n            \n            obs = next_obs\n            episode_reward += reward\n            episode_length += 1\n        \n        # Track metrics\n        episode_rewards.append(episode_reward)\n        episode_lengths.append(episode_length)\n        successes.append(float(info.get('success', False)))\n        \n        # Update visualization\n        metrics = {\n            'episode': episode + 1,\n            'total_steps': agent.total_steps,\n            'episode_reward': episode_reward,\n            'avg_reward': np.mean(episode_rewards),\n            'success_rate': np.mean(successes),\n            'actor_loss': train_metrics.get('actor_loss', 0),\n            'critic_loss': train_metrics.get('critic_loss', 0),\n            'alpha': train_metrics.get('alpha', 0)\n        }\n        z.angularBind('trainMetrics', metrics)\n        \n        # Print progress\n        if (episode + 1) % 10 == 0:\n            print(f\"Episode {episode+1:4d} | \"\n                  f\"Reward: {episode_reward:8.1f} | \"\n                  f\"Avg100: {np.mean(episode_rewards):8.1f} | \"\n                  f\"Success: {np.mean(successes):.1%}\")\n        \n        # Save checkpoint\n        if (episode + 1) % 100 == 0:\n            agent.save(f'/data/models/sac_ep{episode+1}.pt')\n            print(f\"  Saved checkpoint at episode {episode+1}\")\n    \n    print(\"\\nTraining completed!\")\n    return metrics\n\nprint(\"Training function defined.\")\nprint(\"Run train_with_visualization(500) to start training.\")",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/python"
+      }
+    },
+    {
+      "title": "5. Start Training",
+      "text": "%pyspark\n# Start training!\nfinal_metrics = train_with_visualization(num_episodes=300)",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/python"
+      }
+    },
+    {
+      "title": "6. Evaluate Trained Agent",
+      "text": "%pyspark\n# Evaluate trained agent\ndef evaluate_agent(num_episodes=10, render=True):\n    agent.eval_mode()\n    rewards = []\n    successes = []\n    \n    for ep in range(num_episodes):\n        obs, info = env.reset()\n        episode_reward = 0\n        done = False\n        \n        while not done:\n            action = agent.select_action(obs, deterministic=True)\n            obs, reward, terminated, truncated, info = env.step(action)\n            done = terminated or truncated\n            episode_reward += reward\n            \n            if render:\n                z.angularBind('state', env.get_state())\n                time.sleep(0.016)\n        \n        rewards.append(episode_reward)\n        successes.append(info.get('success', False))\n        print(f\"Eval episode {ep+1}: Reward={episode_reward:.1f}, Success={info.get('success', False)}\")\n    \n    agent.train_mode()\n    \n    print(f\"\\nEvaluation Results:\")\n    print(f\"  Avg Reward: {np.mean(rewards):.1f} +/- {np.std(rewards):.1f}\")\n    print(f\"  Success Rate: {np.mean(successes):.1%}\")\n    \n    return rewards, successes\n\n# Run evaluation\nevaluate_agent(10, render=False)",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/python"
+      }
+    },
+    {
+      "title": "7. Watch Agent Play (Realtime)",
+      "text": "%pyspark\n# Watch agent play với realtime rendering\ndef watch_agent_play(level_id='level_01_tutorial'):\n    agent.eval_mode()\n    env.set_level(level_id)\n    obs, info = env.reset()\n    \n    # Bind initial state\n    z.angularBind('state', env.get_state())\n    z.angularBind('ball', env.get_state()['ball'])\n    z.angularBind('board', env.get_state()['board'])\n    z.angularBind('gameStatus', {'level': level_id, 'state': 'PLAYING', 'step': 0})\n    \n    episode_reward = 0\n    step = 0\n    done = False\n    \n    print(f\"Watching agent play {level_id}...\")\n    \n    while not done and step < 1500:\n        # Get action from trained policy\n        action = agent.select_action(obs, deterministic=True)\n        \n        # Step\n        obs, reward, terminated, truncated, info = env.step(action)\n        done = terminated or truncated\n        episode_reward += reward\n        step += 1\n        \n        # Update visualization\n        state = env.get_state()\n        z.angularBind('state', state)\n        z.angularBind('ball', state['ball'])\n        z.angularBind('board', state['board'])\n        z.angularBind('gameStatus', {\n            'level': level_id, \n            'state': 'SUCCESS' if info.get('success') else ('FAILED' if done else 'PLAYING'),\n            'step': step\n        })\n        \n        # Delay for visualization (~60 FPS)\n        time.sleep(0.016)\n    \n    agent.train_mode()\n    \n    print(f\"\\nEpisode finished!\")\n    print(f\"  Steps: {step}\")\n    print(f\"  Total Reward: {episode_reward:.1f}\")\n    print(f\"  Success: {info.get('success', False)}\")\n\n# Run to watch agent\nwatch_agent_play('level_01_tutorial')",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/python"
+      }
+    },
+    {
+      "title": "8. Save/Load Model",
+      "text": "%pyspark\n# Save final model\nagent.save('/data/models/sac_final.pt')\nprint(\"Model saved to /data/models/sac_final.pt\")\n\n# To load:\n# agent.load('/data/models/sac_final.pt')",
+      "user": "anonymous",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false
+        },
+        "editorMode": "ace/mode/python"
+      }
+    }
+  ],
+  "name": "02_Train_SAC",
+  "id": "labyrinth_train_sac",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.10.0",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {}
+}

@@ -1,0 +1,43 @@
+{
+  "id": "level_04_key_lock",
+  "name": "Locked Door",
+  "difficulty": 4,
+  "description": "Tìm chìa khóa để mở cửa.",
+  "hints": ["Nhặt key trước khi đến lock"],
+  "board": {
+    "width": 10.0,
+    "height": 10.0,
+    "max_tilt": 0.15
+  },
+  "ball": {
+    "start": [-4.0, -4.0],
+    "radius": 0.3
+  },
+  "goal": {
+    "position": [4.0, 4.0],
+    "radius": 0.5,
+    "reward": 1000.0
+  },
+  "walls": [
+    {"position": [2, 0], "size": [0.2, 0.5, 4.0]}
+  ],
+  "holes": [],
+  "coins": [
+    {"position": [0, 0], "value": 100},
+    {"position": [-2, -2], "value": 100}
+  ],
+  "keys": [
+    {"position": [-2, 2], "key_id": "gold_key"}
+  ],
+  "locks": [
+    {"position": [2, 2], "required_key_id": "gold_key", "size": [0.3, 0.5, 0.5]}
+  ],
+  "teleports": [],
+  "time_limit": 0,
+  "rewards": {
+    "goal": 1000.0,
+    "hole_penalty": -100.0,
+    "coin_value": 100,
+    "time_penalty": -0.1
+  }
+}

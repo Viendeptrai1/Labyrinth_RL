@@ -1,0 +1,377 @@
+﻿{
+  "paragraphs": [
+    {
+      "text": "%pyspark\nimport numpy as np",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:03:48+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506346353_1662197996",
+      "id": "paragraph_1769506346353_1662197996",
+      "dateCreated": "2026-01-27T09:32:26+0000",
+      "dateStarted": "2026-01-27T11:03:48+0000",
+      "dateFinished": "2026-01-27T11:04:06+0000",
+      "status": "FINISHED",
+      "focus": true,
+      "$$hashKey": "object:226"
+    },
+    {
+      "text": "%pyspark\nimport numpy as np\n\nclass MazeEnv:\n    def __init__(self, board, rewards, initPos):\n        self.initBoard = board\n        self.rewards = rewards\n        self.initPos = initPos\n        self.reset()\n        \n    def getState(self):\n        return self.board, self.x, self.y\n        \n    def getReward(self):\n        return self.score\n        \n    def isTerm(self):\n        return self.done\n        \n    def reset(self):\n        self.board = np.array(self.initBoard)\n        self.x, self.y = self.initPos\n        self.score = 0\n        self.done = False\n        \n    # 0, 1, 2, 3: Up, right, down, left \n    def step(self, a):\n        if self.done: return\n        \n        ny, nx = self.y, self.x\n        if a == 0: ny -= 1\n        elif a == 1: nx += 1\n        elif a == 2: ny += 1\n        elif a == 3: nx -= 1\n        \n        if 0 <= ny < self.board.shape[0] and 0 <= nx < self.board.shape[1]:\n            dest = self.board[ny][nx]\n            if str(dest) != '1':\n                self.x, self.y = nx, ny\n\n                if dest in self.rewards:\n                    self.score += self.rewards[dest]\n                    self.board[ny][nx] = 0\n                \n                # If Goal\n                if dest == 'G':\n                    self.done = True\n",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:04:06+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506347657_1504730719",
+      "id": "paragraph_1769506347657_1504730719",
+      "dateCreated": "2026-01-27T09:32:27+0000",
+      "dateStarted": "2026-01-27T11:04:06+0000",
+      "dateFinished": "2026-01-27T11:04:06+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:227"
+    },
+    {
+      "text": "%pyspark\nmaze = MazeEnv([[0, 1, 0, 'C', 0, 0, 0, 'W'],\n                [0, 1, 0, 1, 0, 1, 0, 0],\n                [0, 1, 0, 1, 'E', 1, 'E', 0],\n                [0, 0, 0, 'C', 0, 1, 0, 0],\n                [0, 1, 1, 1, 0, 1, 0, 'W'],\n                ['W', 1, 'C', 0, 0, 1, 0, 0],\n                [0, 1, 1, 1, 0, 1, 'C', 0],\n                [0, 0, 'W', 'W', 0, 1, 0, 'G']], {\n                    'C': 500, 'W': 50, 'E': -100\n                }, (0, 0))\n\nboard, x, y = maze.getState()\nz.angularBind('board', board)\nz.angularBind('pos', (x, y))\nz.angularBind('score', maze.getReward())\nz.angularBind('status', '')\n",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:04:06+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506401191_1144289581",
+      "id": "paragraph_1769506401191_1144289581",
+      "dateCreated": "2026-01-27T09:33:21+0000",
+      "dateStarted": "2026-01-27T11:04:06+0000",
+      "dateFinished": "2026-01-27T11:04:06+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:228"
+    },
+    {
+      "text": "%angular\n<style>\n    .boardCell {\n        display: inline-block;\n        width: 40px;\n        height: 40px;\n        border: 1px solid black;\n    }\n    \n    .blockCell {\n        background-color: black;\n    }\n    \n    .boardContainer {\n        line-height: 0;\n    }\n    \n    .cell {\n        position: relative;\n        width: 100%;\n        height: 100%;\n    }\n    \n    .cell label {\n        position: absolute;\n        top: 50%;\n        left: 35%;\n    }\n    \n    .agentJoystick button {\n        font-size: 60px;\n    }\n</style>\n\n<div class=\"container\">\n    <div class=\"row\">\n        <div class=\"col-md-6\">\n            <div class=\"row\"><div class=\"col-md-12\"><h3>Score: {{score}} <span ng-if=\"status\" style=\"color:red\">| {{status}}</span></h3></div></div>\n            <div class=\"boardContainer\" ng-model=\"pos\">\n                <div class=\"boardRow\" ng-repeat=\"(i, row) in board track by $index\">\n                    <div class=\"boardCell\" ng-repeat=\"(j, cell) in row track by $index\">\n                        <!--Khối tường (1)-->\n                        <div class=\"cell blockCell\" ng-if=\"cell==1\"></div>\n                        <!--Nhân vật (M)-->\n                        <div class=\"cell\" ng-if=\"i == pos[1] && j == pos[0]\"><label>M</label></div>\n                        <!--Phần thưởng (C, E, W, G)-->\n                        <div class=\"cell\" ng-if=\"(i != pos[1] || j != pos[0]) && cell != 0 && cell != 1\"><label>{{cell}}</label></div>\n                        <!--Ô trống-->\n                        <div class=\"cell\" ng-if=\"(i != pos[1] || j != pos[0]) && cell==0\"></div>\n                    </div>\n                </div>\n            </div>\n        </div>\n        <div class=\"col-md-6\">\n            <div class=\"agentJoystick container\">\n                <div class=\"row\">\n                    <div class=\"col-md-4\"></div>\n                    <div class=\"col-md-4\"><button ng-click=\"z.runParagraph('paragraph_1769506585194_1829726944')\">⬆️</button></div>\n                    <div class=\"col-md-4\"></div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-md-4\"><button ng-click=\"z.runParagraph('paragraph_1769506605307_1056760989')\">⬅️</button></div>\n                    <div class=\"col-md-4\"></div>\n                    <div class=\"col-md-4\"><button ng-click=\"z.runParagraph('paragraph_1769506598681_406961615')\">➡️</button></div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-md-4\"></div>\n                    <div class=\"col-md-4\"><button ng-click=\"z.runParagraph('paragraph_1769506602423_1178090813')\">⬇️</button></div>\n                    <div class=\"col-md-4\"></div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:04:06+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "text",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/text",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "ANGULAR",
+            "data": "\n<style>\n    .boardCell {\n        display: inline-block;\n        width: 40px;\n        height: 40px;\n        border: 1px solid black;\n    }\n    \n    .blockCell {\n        background-color: black;\n    }\n    \n    .boardContainer {\n        line-height: 0;\n    }\n    \n    .cell {\n        position: relative;\n        width: 100%;\n        height: 100%;\n    }\n    \n    .cell label {\n        position: absolute;\n        top: 50%;\n        left: 35%;\n    }\n    \n    .agentJoystick button {\n        font-size: 60px;\n    }\n</style>\n\n<div class=\"container\">\n    <div class=\"row\">\n        <div class=\"col-md-6\">\n            <div class=\"row\"><div class=\"col-md-12\"><h3>Score: {{score}} <span ng-if=\"status\" style=\"color:red\">| {{status}}</span></h3></div></div>\n            <div class=\"boardContainer\" ng-model=\"pos\">\n                <div class=\"boardRow\" ng-repeat=\"(i, row) in board track by $index\">\n                    <div class=\"boardCell\" ng-repeat=\"(j, cell) in row track by $index\">\n                        <!--Khối tường (1)-->\n                        <div class=\"cell blockCell\" ng-if=\"cell==1\"></div>\n                        <!--Nhân vật (M)-->\n                        <div class=\"cell\" ng-if=\"i == pos[1] && j == pos[0]\"><label>M</label></div>\n                        <!--Phần thưởng (C, E, W, G)-->\n                        <div class=\"cell\" ng-if=\"(i != pos[1] || j != pos[0]) && cell != 0 && cell != 1\"><label>{{cell}}</label></div>\n                        <!--Ô trống-->\n                        <div class=\"cell\" ng-if=\"(i != pos[1] || j != pos[0]) && cell==0\"></div>\n                    </div>\n                </div>\n            </div>\n        </div>\n        <div class=\"col-md-6\">\n            <div class=\"agentJoystick container\">\n                <div class=\"row\">\n                    <div class=\"col-md-4\"></div>\n                    <div class=\"col-md-4\"><button ng-click=\"z.runParagraph('paragraph_1769506585194_1829726944')\">⬆️</button></div>\n                    <div class=\"col-md-4\"></div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-md-4\"><button ng-click=\"z.runParagraph('paragraph_1769506605307_1056760989')\">⬅️</button></div>\n                    <div class=\"col-md-4\"></div>\n                    <div class=\"col-md-4\"><button ng-click=\"z.runParagraph('paragraph_1769506598681_406961615')\">➡️</button></div>\n                </div>\n                <div class=\"row\">\n                    <div class=\"col-md-4\"></div>\n                    <div class=\"col-md-4\"><button ng-click=\"z.runParagraph('paragraph_1769506602423_1178090813')\">⬇️</button></div>\n                    <div class=\"col-md-4\"></div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506412664_1067857495",
+      "id": "paragraph_1769506412664_1067857495",
+      "dateCreated": "2026-01-27T09:33:32+0000",
+      "dateStarted": "2026-01-27T11:04:06+0000",
+      "dateFinished": "2026-01-27T11:04:10+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:229"
+    },
+    {
+      "text": "%pyspark\ndef moveUp():\n    maze.step(0)\n    board, x, y = maze.getState()\n    score = maze.getReward()\n    is_done = maze.isTerm()\n    \n    z.angularBind('board', board)\n    z.angularBind('pos', (x, y))\n    z.angularBind('score', score)\n    if is_done:\n        z.angularBind('status', 'GAME OVER')\n    \n    return x, y\n\nmoveUp()\n",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:04:45+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "(4, 0)\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506585194_1829726944",
+      "id": "paragraph_1769506585194_1829726944",
+      "dateCreated": "2026-01-27T09:36:25+0000",
+      "dateStarted": "2026-01-27T11:04:45+0000",
+      "dateFinished": "2026-01-27T11:04:45+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:230"
+    },
+    {
+      "text": "%pyspark\ndef moveRight():\n    maze.step(1)\n    board, x, y = maze.getState()\n    score = maze.getReward()\n    is_done = maze.isTerm()\n    \n    z.angularBind('board', board)\n    z.angularBind('pos', (x, y))\n    z.angularBind('score', score)\n    if is_done:\n        z.angularBind('status', 'GAME OVER')\n    \n    return x, y\n\nmoveRight()\n",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:04:46+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "(7, 0)\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506598681_406961615",
+      "id": "paragraph_1769506598681_406961615",
+      "dateCreated": "2026-01-27T09:36:38+0000",
+      "dateStarted": "2026-01-27T11:04:46+0000",
+      "dateFinished": "2026-01-27T11:04:46+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:231"
+    },
+    {
+      "text": "%pyspark\ndef moveDown():\n    maze.step(2)\n    board, x, y = maze.getState()\n    score = maze.getReward()\n    is_done = maze.isTerm()\n    \n    z.angularBind('board', board)\n    z.angularBind('pos', (x, y))\n    z.angularBind('score', score)\n    if is_done:\n        z.angularBind('status', 'GAME OVER')\n    \n    return x, y\n\nmoveDown()\n",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:04:48+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "(7, 7)\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506602423_1178090813",
+      "id": "paragraph_1769506602423_1178090813",
+      "dateCreated": "2026-01-27T09:36:42+0000",
+      "dateStarted": "2026-01-27T11:04:48+0000",
+      "dateFinished": "2026-01-27T11:04:48+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:232"
+    },
+    {
+      "text": "%pyspark\ndef moveLeft():\n    maze.step(3)\n    board, x, y = maze.getState()\n    score = maze.getReward()\n    is_done = maze.isTerm()\n    \n    z.angularBind('board', board)\n    z.angularBind('pos', (x, y))\n    z.angularBind('score', score)\n    if is_done:\n        z.angularBind('status', 'GAME OVER')\n    \n    return x, y\n\nmoveLeft()\n",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:04:11+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "(0, 1)\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506605307_1056760989",
+      "id": "paragraph_1769506605307_1056760989",
+      "dateCreated": "2026-01-27T09:36:45+0000",
+      "dateStarted": "2026-01-27T11:04:11+0000",
+      "dateFinished": "2026-01-27T11:04:11+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:233"
+    },
+    {
+      "text": "%pyspark\n",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-27T11:04:11+0000",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769506842230_1272061870",
+      "id": "paragraph_1769506842230_1272061870",
+      "dateCreated": "2026-01-27T09:40:42+0000",
+      "dateStarted": "2026-01-27T11:04:11+0000",
+      "dateFinished": "2026-01-27T11:04:11+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:234"
+    }
+  ],
+  "name": "BT_Buoi3",
+  "id": "2MFR4311B",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.10.0",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {},
+  "path": "/BT_Buoi3"
+}

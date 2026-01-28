@@ -1,0 +1,41 @@
+{
+  "id": "level_02_simple_maze",
+  "name": "Simple Maze",
+  "difficulty": 2,
+  "description": "Đi qua maze đơn giản để đến goal.",
+  "hints": ["Đi vòng qua các tường"],
+  "board": {
+    "width": 10.0,
+    "height": 10.0,
+    "max_tilt": 0.15
+  },
+  "ball": {
+    "start": [-4.0, -4.0],
+    "radius": 0.3
+  },
+  "goal": {
+    "position": [4.0, 4.0],
+    "radius": 0.5,
+    "reward": 1000.0
+  },
+  "walls": [
+    {"position": [0, -2], "size": [3.0, 0.5, 0.2]},
+    {"position": [0, 2], "size": [3.0, 0.5, 0.2]},
+    {"position": [-2, 0], "size": [0.2, 0.5, 2.0]},
+    {"position": [2, 0], "size": [0.2, 0.5, 2.0]}
+  ],
+  "holes": [],
+  "coins": [
+    {"position": [0, 0], "value": 100}
+  ],
+  "keys": [],
+  "locks": [],
+  "teleports": [],
+  "time_limit": 0,
+  "rewards": {
+    "goal": 1000.0,
+    "hole_penalty": -100.0,
+    "coin_value": 100,
+    "time_penalty": -0.1
+  }
+}

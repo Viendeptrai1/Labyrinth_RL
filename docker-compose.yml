@@ -1,0 +1,19 @@
+services:
+  zeppelin:
+    build: .
+    container_name: zeppelin-labyrinth
+    ports:
+      - "8080:8080"
+      - "4040:4040"
+    environment:
+      - ZEPPELIN_LOG_DIR=/logs
+      - ZEPPELIN_NOTEBOOK_DIR=/notebook
+      - PYTHONPATH=/src
+    volumes:
+      - ./notebooks:/notebook
+      - ./src:/src
+      - ./data:/data
+      - ./logs:/logs
+      - ./assets:/assets
+    restart: unless-stopped
+    shm_size: '2gb'

@@ -1,0 +1,56 @@
+{
+  "id": "level_08_teleport_maze",
+  "name": "Teleport Maze",
+  "difficulty": 8,
+  "description": "Sử dụng nhiều teleport để điều hướng.",
+  "hints": ["Có nhiều đường đi, chọn đường an toàn nhất"],
+  "board": {
+    "width": 14.0,
+    "height": 14.0,
+    "max_tilt": 0.10
+  },
+  "ball": {
+    "start": [-6.0, -6.0],
+    "radius": 0.3
+  },
+  "goal": {
+    "position": [6.0, 6.0],
+    "radius": 0.5,
+    "reward": 2500.0
+  },
+  "walls": [
+    {"position": [-3, -3], "size": [0.2, 0.5, 4.0]},
+    {"position": [3, 3], "size": [0.2, 0.5, 4.0]},
+    {"position": [0, 0], "size": [3.0, 0.5, 0.2]},
+    {"position": [-5, 2], "size": [2.0, 0.5, 0.2]},
+    {"position": [5, -2], "size": [2.0, 0.5, 0.2]}
+  ],
+  "holes": [
+    {"position": [-4, 0], "radius": 0.5},
+    {"position": [4, 0], "radius": 0.5},
+    {"position": [0, 4], "radius": 0.4},
+    {"position": [0, -4], "radius": 0.4},
+    {"position": [2, 2], "radius": 0.4},
+    {"position": [-2, -2], "radius": 0.4}
+  ],
+  "coins": [
+    {"position": [-5, 5], "value": 200},
+    {"position": [5, -5], "value": 200},
+    {"position": [0, 0], "value": 500}
+  ],
+  "keys": [],
+  "locks": [],
+  "teleports": [
+    {"position": [-5, -3], "target": [5, 3], "pair_id": "tp1", "cooldown": 2.0},
+    {"position": [5, 3], "target": [-5, -3], "pair_id": "tp1", "cooldown": 2.0},
+    {"position": [-3, 5], "target": [3, -5], "pair_id": "tp2", "cooldown": 2.0},
+    {"position": [3, -5], "target": [-3, 5], "pair_id": "tp2", "cooldown": 2.0}
+  ],
+  "time_limit": 120,
+  "rewards": {
+    "goal": 2500.0,
+    "hole_penalty": -500.0,
+    "coin_value": 200,
+    "time_penalty": -0.2
+  }
+}
