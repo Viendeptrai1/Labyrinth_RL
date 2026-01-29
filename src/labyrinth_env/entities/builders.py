@@ -1,5 +1,5 @@
 """
-Entity Builders - Factory functions để tạo các entity cụ thể
+Entity Builders - Factory functions để tạo các entity cụ thể (2D)
 Đăng ký với EntityFactory để có thể tạo từ level config
 """
 from __future__ import annotations
@@ -16,22 +16,22 @@ from ..core.components import (
 
 @EntityFactory.register('ball')
 def create_ball(
-    position: Tuple[float, float, float] = (0, 0.5, 0),
+    position: Tuple[float, float] = (0, 0),
     radius: float = 0.3,
     mass: float = 1.0,
     friction: float = 0.3,
     **kwargs
 ) -> Entity:
     """
-    Tạo ball entity (player controlled).
-    Y position = radius để ball nằm trên mặt bàn.
+    Tạo ball entity (player controlled) - 2D.
+    Position: (x, y) trên mặt phẳng bàn.
     """
     ball = Entity(entity_type=EntityType.BALL)
     
-    # Transform - position on board surface
+    # Transform - position on board (2D)
     transform = TransformComponent(
-        position=np.array([position[0], radius, position[2]], dtype=float),
-        scale=np.array([radius * 2, radius * 2, radius * 2])
+        position=np.array(position, dtype=float),
+        scale=np.array([radius * 2, radius * 2])
     )
     
     # Physics
@@ -55,12 +55,12 @@ def create_ball(
 
 @EntityFactory.register('wall')
 def create_wall(
-    position: Tuple[float, float, float],
-    size: Tuple[float, float, float] = (0.5, 1.0, 0.5),
+    position: Tuple[float, float],
+    size: Tuple[float, float] = (0.5, 0.5),
     **kwargs
 ) -> Entity:
     """
-    Tạo wall entity (static obstacle).
+    Tạo wall entity (static obstacle) - 2D.
     Size là half-extents (box từ -size đến +size).
     """
     wall = Entity(entity_type=EntityType.WALL)
@@ -84,19 +84,19 @@ def create_wall(
 
 @EntityFactory.register('hole')
 def create_hole(
-    position: Tuple[float, float, float],
+    position: Tuple[float, float],
     radius: float = 0.4,
     penalty: float = -100.0,
     **kwargs
 ) -> Entity:
     """
-    Tạo hole entity (trap - ball falls in = game over).
+    Tạo hole entity (trap - ball falls in = game over) - 2D.
     """
     hole = Entity(entity_type=EntityType.HOLE)
     
     transform = TransformComponent(
         position=np.array(position, dtype=float),
-        scale=np.array([radius * 2, 0.1, radius * 2])
+        scale=np.array([radius * 2, radius * 2])
     )
     
     trigger = TriggerComponent(
@@ -114,18 +114,18 @@ def create_hole(
 
 @EntityFactory.register('coin')
 def create_coin(
-    position: Tuple[float, float, float],
+    position: Tuple[float, float],
     value: int = 100,
     **kwargs
 ) -> Entity:
     """
-    Tạo coin entity (collectible for score).
+    Tạo coin entity (collectible for score) - 2D.
     """
     coin = Entity(entity_type=EntityType.COIN)
     
     transform = TransformComponent(
         position=np.array(position, dtype=float),
-        scale=np.array([0.3, 0.3, 0.3])
+        scale=np.array([0.3, 0.3])
     )
     
     collectible = CollectibleComponent(
@@ -141,19 +141,19 @@ def create_coin(
 
 @EntityFactory.register('key')
 def create_key(
-    position: Tuple[float, float, float],
+    position: Tuple[float, float],
     key_id: str,
     value: int = 50,
     **kwargs
 ) -> Entity:
     """
-    Tạo key entity (collectible to unlock locks).
+    Tạo key entity (collectible to unlock locks) - 2D.
     """
     key = Entity(entity_type=EntityType.KEY)
     
     transform = TransformComponent(
         position=np.array(position, dtype=float),
-        scale=np.array([0.25, 0.25, 0.25])
+        scale=np.array([0.25, 0.25])
     )
     
     collectible = CollectibleComponent(
@@ -170,13 +170,13 @@ def create_key(
 
 @EntityFactory.register('lock')
 def create_lock(
-    position: Tuple[float, float, float],
+    position: Tuple[float, float],
     required_key_id: str,
-    size: Tuple[float, float, float] = (0.5, 1.0, 0.5),
+    size: Tuple[float, float] = (0.5, 0.5),
     **kwargs
 ) -> Entity:
     """
-    Tạo lock entity (barrier that requires key to open).
+    Tạo lock entity (barrier that requires key to open) - 2D.
     Acts like a wall until unlocked.
     """
     lock = Entity(entity_type=EntityType.LOCK)
@@ -211,21 +211,21 @@ def create_lock(
 
 @EntityFactory.register('teleport')
 def create_teleport(
-    position: Tuple[float, float, float],
-    target_position: Tuple[float, float, float],
+    position: Tuple[float, float],
+    target_position: Tuple[float, float],
     pair_id: str = None,
     radius: float = 0.4,
     cooldown: float = 1.5,
     **kwargs
 ) -> Entity:
     """
-    Tạo teleport entity (transports ball to target location).
+    Tạo teleport entity (transports ball to target location) - 2D.
     """
     teleport = Entity(entity_type=EntityType.TELEPORT)
     
     transform = TransformComponent(
         position=np.array(position, dtype=float),
-        scale=np.array([radius * 2, 0.2, radius * 2])
+        scale=np.array([radius * 2, radius * 2])
     )
     
     trigger = TriggerComponent(
@@ -245,19 +245,19 @@ def create_teleport(
 
 @EntityFactory.register('goal')
 def create_goal(
-    position: Tuple[float, float, float],
+    position: Tuple[float, float],
     radius: float = 0.5,
     reward: float = 1000.0,
     **kwargs
 ) -> Entity:
     """
-    Tạo goal entity (win condition - destination for ball).
+    Tạo goal entity (win condition - destination for ball) - 2D.
     """
     goal = Entity(entity_type=EntityType.GOAL)
     
     transform = TransformComponent(
         position=np.array(position, dtype=float),
-        scale=np.array([radius * 2, 0.1, radius * 2])
+        scale=np.array([radius * 2, radius * 2])
     )
     
     trigger = TriggerComponent(
@@ -273,38 +273,37 @@ def create_goal(
     return goal
 
 
-# ==================== Helper: Create wall segments ====================
+# ==================== Helper: Create wall segments (2D) ====================
 
 def create_wall_segment(
     start: Tuple[float, float],
     end: Tuple[float, float],
-    thickness: float = 0.2,
-    height: float = 0.5
+    thickness: float = 0.2
 ) -> Entity:
     """
-    Tạo wall segment từ điểm start đến end (trên mặt phẳng XZ).
+    Tạo wall segment từ điểm start đến end (trên mặt phẳng XY).
     Tiện cho level design.
     """
     # Tính center và size
     cx = (start[0] + end[0]) / 2
-    cz = (start[1] + end[1]) / 2
+    cy = (start[1] + end[1]) / 2
     
     dx = end[0] - start[0]
-    dz = end[1] - start[1]
-    length = np.sqrt(dx*dx + dz*dz)
+    dy = end[1] - start[1]
+    length = np.sqrt(dx*dx + dy*dy)
     
     # Rotation angle
-    angle = np.arctan2(dz, dx)
+    angle = np.arctan2(dy, dx)
     
     wall = create_wall(
-        position=(cx, height/2, cz),
-        size=(length/2, height/2, thickness/2)
+        position=(cx, cy),
+        size=(length/2, thickness/2)
     )
     
     # Set rotation
     transform = wall.get_component(TransformComponent)
     if transform:
-        transform.rotation[1] = angle  # Rotate around Y axis
+        transform.rotation[0] = angle  # Rotate in 2D plane
     
     return wall
 
@@ -312,11 +311,10 @@ def create_wall_segment(
 def create_rectangular_border(
     width: float,
     height: float,
-    wall_thickness: float = 0.2,
-    wall_height: float = 0.5
+    wall_thickness: float = 0.2
 ) -> List[Entity]:
     """
-    Tạo 4 walls bao quanh board.
+    Tạo 4 walls bao quanh board (2D).
     """
     half_w = width / 2
     half_h = height / 2
@@ -324,23 +322,23 @@ def create_rectangular_border(
     walls = [
         # Top wall
         create_wall(
-            position=(0, wall_height/2, -half_h),
-            size=(half_w, wall_height/2, wall_thickness/2)
+            position=(0, half_h),
+            size=(half_w, wall_thickness/2)
         ),
         # Bottom wall
         create_wall(
-            position=(0, wall_height/2, half_h),
-            size=(half_w, wall_height/2, wall_thickness/2)
+            position=(0, -half_h),
+            size=(half_w, wall_thickness/2)
         ),
         # Left wall
         create_wall(
-            position=(-half_w, wall_height/2, 0),
-            size=(wall_thickness/2, wall_height/2, half_h)
+            position=(-half_w, 0),
+            size=(wall_thickness/2, half_h)
         ),
         # Right wall
         create_wall(
-            position=(half_w, wall_height/2, 0),
-            size=(wall_thickness/2, wall_height/2, half_h)
+            position=(half_w, 0),
+            size=(wall_thickness/2, half_h)
         ),
     ]
     

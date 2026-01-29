@@ -25,14 +25,14 @@ class Component:
 @dataclass
 class TransformComponent(Component):
     """
-    Vị trí và hướng trong không gian 3D
-    Position: (x, y, z) - tâm của object
-    Rotation: (pitch, roll, yaw) - góc nghiêng (radians)
-    Scale: (sx, sy, sz) - kích thước
+    Vị trí và hướng trong không gian 2D (top-down)
+    Position: (x, y) - tọa độ trên mặt phẳng bàn
+    Rotation: (pitch, roll) - góc nghiêng (radians) của board (dùng cho tilt-based)
+    Scale: (sx, sy) - kích thước trong mặt phẳng
     """
-    position: np.ndarray = field(default_factory=lambda: np.zeros(3))
-    rotation: np.ndarray = field(default_factory=lambda: np.zeros(3))
-    scale: np.ndarray = field(default_factory=lambda: np.ones(3))
+    position: np.ndarray = field(default_factory=lambda: np.zeros(2))
+    rotation: np.ndarray = field(default_factory=lambda: np.zeros(2))
+    scale: np.ndarray = field(default_factory=lambda: np.ones(2))
     
     @property
     def x(self) -> float:
@@ -43,18 +43,14 @@ class TransformComponent(Component):
         return self.position[1]
     
     @property
-    def z(self) -> float:
-        return self.position[2]
-    
-    @property
     def pitch(self) -> float:
         """Nghiêng trước-sau (quanh trục X)"""
         return self.rotation[0]
     
     @property
     def roll(self) -> float:
-        """Nghiêng trái-phải (quanh trục Z)"""
-        return self.rotation[2]
+        """Nghiêng trái-phải"""
+        return self.rotation[1]
     
     def to_dict(self) -> dict:
         return {
@@ -69,8 +65,8 @@ class PhysicsComponent(Component):
     """
     Physics properties cho dynamic objects (ball)
     """
-    velocity: np.ndarray = field(default_factory=lambda: np.zeros(3))
-    acceleration: np.ndarray = field(default_factory=lambda: np.zeros(3))
+    velocity: np.ndarray = field(default_factory=lambda: np.zeros(2))
+    acceleration: np.ndarray = field(default_factory=lambda: np.zeros(2))
     mass: float = 1.0
     radius: float = 0.5  # Cho sphere collision
     friction: float = 0.3
@@ -241,7 +237,7 @@ class CollisionComponent(Component):
     Collision shape cho static objects (walls)
     """
     shape: str = 'box'  # 'box', 'sphere', 'cylinder'
-    size: np.ndarray = field(default_factory=lambda: np.ones(3))  # half-extents cho box
+    size: np.ndarray = field(default_factory=lambda: np.ones(2))  # half-extents cho box (2D)
     is_solid: bool = True  # Có chặn ball không
     
     def to_dict(self) -> dict:

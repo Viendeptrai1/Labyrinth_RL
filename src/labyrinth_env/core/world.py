@@ -1,5 +1,5 @@
 """
-World - Container quản lý tất cả entities và physics update
+World - Container quản lý tất cả entities và physics update (2D)
 """
 from __future__ import annotations
 from typing import List, Dict, Optional, Iterator, Tuple
@@ -17,37 +17,35 @@ from .events import EventBus, GameEvent
 
 @dataclass
 class BoardConfig:
-    """Cấu hình bàn chơi"""
+    """Cấu hình bàn chơi 2D"""
     width: float = 10.0      # Chiều rộng (X)
-    height: float = 10.0     # Chiều dài (Z trong 3D, Y trong top-down)
-    thickness: float = 0.5   # Độ dày bàn
-    wall_height: float = 1.0 # Chiều cao tường
+    height: float = 10.0     # Chiều cao (Y) - top-down view
     max_tilt: float = 0.15   # Góc nghiêng tối đa (radians, ~8.6 degrees)
     
-    # Hybrid movement settings
-    force_magnitude: float = 20.0   # Lực đẩy ball khi input
-    friction_coefficient: float = 0.92  # Hệ số ma sát (0.9 = giữ 90% velocity mỗi frame)
-    max_velocity: float = 8.0       # Tốc độ tối đa
+    # Hybrid movement settings - STRONG defaults for human play
+    force_magnitude: float = 80.0   # Lực đẩy ball khi input
+    friction_coefficient: float = 0.90  # Hệ số ma sát
+    max_velocity: float = 15.0      # Tốc độ tối đa
 
 
-# Direction vectors cho 8 hướng di chuyển
-# UI render: top = 200 - Z*40, nên Z tăng = ball đi lên màn hình
+# Direction vectors cho 8 hướng di chuyển (2D: x, y)
+# UI render: y tăng = ball đi lên màn hình
 DIRECTIONS = {
-    'up': np.array([0.0, 0.0, 1.0]),       # W - đi lên (tăng Z)
-    'down': np.array([0.0, 0.0, -1.0]),    # S - đi xuống (giảm Z)
-    'left': np.array([-1.0, 0.0, 0.0]),    # A - đi trái (giảm X)
-    'right': np.array([1.0, 0.0, 0.0]),    # D - đi phải (tăng X)
-    'upleft': np.array([-0.707, 0.0, 0.707]),     # WA
-    'upright': np.array([0.707, 0.0, 0.707]),     # WD
-    'downleft': np.array([-0.707, 0.0, -0.707]),  # SA
-    'downright': np.array([0.707, 0.0, -0.707]),  # SD
-    'none': np.array([0.0, 0.0, 0.0]),     # Không di chuyển
+    'up': np.array([0.0, 1.0]),        # W - đi lên (tăng Y)
+    'down': np.array([0.0, -1.0]),     # S - đi xuống (giảm Y)
+    'left': np.array([-1.0, 0.0]),     # A - đi trái (giảm X)
+    'right': np.array([1.0, 0.0]),     # D - đi phải (tăng X)
+    'upleft': np.array([-0.707, 0.707]),      # WA
+    'upright': np.array([0.707, 0.707]),      # WD
+    'downleft': np.array([-0.707, -0.707]),   # SA
+    'downright': np.array([0.707, -0.707]),   # SD
+    'none': np.array([0.0, 0.0]),      # Không di chuyển
 }
     
 
 class World:
     """
-    World container - quản lý entities và physics simulation.
+    World container - quản lý entities và physics simulation (2D).
     Đây là "source of truth" cho game state.
     """
     
@@ -146,7 +144,7 @@ class World:
     
     def apply_ball_force(self, direction: str) -> None:
         """
-        Apply force vào ball theo hướng.
+        Apply force vào ball theo hướng (2D).
         Direction: 'up', 'down', 'left', 'right', 'upleft', 'upright', 'downleft', 'downright', 'none'
         """
         if self._ball is None or not self._ball.active:
@@ -156,12 +154,12 @@ class World:
         if ball_physics is None:
             return
         
-        # Get direction vector
+        # Get direction vector (2D)
         dir_vector = DIRECTIONS.get(direction, DIRECTIONS['none'])
         
-        # Apply force
-        force = dir_vector * self.board_config.force_magnitude
-        ball_physics.velocity += force * self.dt
+        # Apply impulse directly to velocity (stronger, more responsive)
+        impulse = dir_vector * self.board_config.force_magnitude * 0.1
+        ball_physics.velocity += impulse
         
         # Clamp velocity
         speed = np.linalg.norm(ball_physics.velocity)
@@ -200,7 +198,7 @@ class World:
         
         # 2. Stop if very slow
         if np.linalg.norm(ball_physics.velocity) < 0.01:
-            ball_physics.velocity = np.zeros(3)
+            ball_physics.velocity = np.zeros(2)
         
         # 3. Update position
         new_position = ball_transform.position + ball_physics.velocity * dt
@@ -235,7 +233,7 @@ class World:
     
     def step(self, dt: float = None) -> Dict:
         """
-        Update physics cho 1 timestep.
+        Update physics cho 1 timestep (tilt-based).
         Returns dict với info về các events xảy ra.
         """
         if dt is None:
@@ -260,14 +258,14 @@ class World:
         if ball_transform is None or ball_physics is None:
             return info
         
-        # 1. Tính gravity dựa trên tilt
+        # 1. Tính gravity dựa trên tilt (2D)
         # Khi bàn nghiêng, thành phần gravity chiếu xuống mặt bàn
-        gx = self.gravity * np.sin(self._board_roll)   # Nghiêng trái-phải
-        gz = self.gravity * np.sin(self._board_pitch)  # Nghiêng trước-sau
+        ax = self.gravity * np.sin(self._board_roll)   # Nghiêng trái-phải -> X
+        ay = self.gravity * np.sin(self._board_pitch)  # Nghiêng trước-sau -> Y
         
         # 2. Apply gravity và friction
-        ball_physics.acceleration[0] = gx
-        ball_physics.acceleration[2] = gz
+        ball_physics.acceleration[0] = ax
+        ball_physics.acceleration[1] = ay
         
         # Friction (đơn giản)
         friction_force = -ball_physics.friction * ball_physics.velocity
@@ -299,7 +297,7 @@ class World:
         info['collections'] = collect_info
         
         # 9. Reset acceleration cho frame tiếp theo
-        ball_physics.acceleration = np.zeros(3)
+        ball_physics.acceleration = np.zeros(2)
         
         # Publish state update
         self._event_bus.publish(GameEvent.STATE_UPDATED, time=self._time, step=self._step_count)
@@ -313,7 +311,7 @@ class World:
         old_pos: np.ndarray
     ) -> Tuple[np.ndarray, bool]:
         """
-        Xử lý va chạm với walls.
+        Xử lý va chạm với walls (2D AABB).
         Returns (adjusted_position, collided)
         """
         collided = False
@@ -331,18 +329,18 @@ class World:
             if not wall_collision.is_solid:
                 continue
             
-            # Simple AABB collision cho box walls
+            # Simple AABB collision cho box walls (2D)
             if wall_collision.shape == 'box':
                 wall_pos = wall_transform.position
                 half_size = wall_collision.size
                 ball_radius = physics.radius
                 
-                # Check overlap
+                # Check overlap (2D)
                 min_bound = wall_pos - half_size - ball_radius
                 max_bound = wall_pos + half_size + ball_radius
                 
                 if (min_bound[0] <= new_pos[0] <= max_bound[0] and
-                    min_bound[2] <= new_pos[2] <= max_bound[2]):
+                    min_bound[1] <= new_pos[1] <= max_bound[1]):
                     
                     collided = True
                     
@@ -351,8 +349,8 @@ class World:
                     penetrations = [
                         new_pos[0] - min_bound[0],  # left
                         max_bound[0] - new_pos[0],  # right
-                        new_pos[2] - min_bound[2],  # front
-                        max_bound[2] - new_pos[2],  # back
+                        new_pos[1] - min_bound[1],  # bottom
+                        max_bound[1] - new_pos[1],  # top
                     ]
                     min_idx = np.argmin(penetrations)
                     
@@ -362,22 +360,22 @@ class World:
                     elif min_idx == 1:  # Push right
                         new_pos[0] = max_bound[0]
                         physics.velocity[0] = -physics.velocity[0] * physics.restitution
-                    elif min_idx == 2:  # Push front
-                        new_pos[2] = min_bound[2]
-                        physics.velocity[2] = -physics.velocity[2] * physics.restitution
-                    else:  # Push back
-                        new_pos[2] = max_bound[2]
-                        physics.velocity[2] = -physics.velocity[2] * physics.restitution
+                    elif min_idx == 2:  # Push bottom
+                        new_pos[1] = min_bound[1]
+                        physics.velocity[1] = -physics.velocity[1] * physics.restitution
+                    else:  # Push top
+                        new_pos[1] = max_bound[1]
+                        physics.velocity[1] = -physics.velocity[1] * physics.restitution
         
         return new_pos, collided
     
     def _clamp_to_board(self, pos: np.ndarray, radius: float) -> np.ndarray:
-        """Giữ ball trong bounds của board"""
+        """Giữ ball trong bounds của board (2D)"""
         half_w = self.board_config.width / 2 - radius
         half_h = self.board_config.height / 2 - radius
         
         pos[0] = np.clip(pos[0], -half_w, half_w)
-        pos[2] = np.clip(pos[2], -half_h, half_h)
+        pos[1] = np.clip(pos[1], -half_h, half_h)
         
         return pos
     
@@ -386,9 +384,9 @@ class World:
         ball_transform: TransformComponent,
         ball_inventory: InventoryComponent
     ) -> List[Dict]:
-        """Check và xử lý triggers (holes, goal, teleports, locks)"""
+        """Check và xử lý triggers (holes, goal, teleports, locks) - 2D"""
         triggered = []
-        ball_pos = ball_transform.position
+        ball_pos = ball_transform.position  # Already 2D
         
         # Check holes
         for hole in self._entities_by_type[EntityType.HOLE]:
@@ -400,7 +398,7 @@ class World:
             if hole_transform is None or hole_trigger is None:
                 continue
             
-            dist = np.linalg.norm(ball_pos[[0, 2]] - hole_transform.position[[0, 2]])
+            dist = np.linalg.norm(ball_pos - hole_transform.position)
             if dist < hole_trigger.radius:
                 success, reward = hole_trigger.trigger(self._time)
                 if success:
@@ -421,7 +419,7 @@ class World:
             if goal_transform is None or goal_trigger is None:
                 continue
             
-            dist = np.linalg.norm(ball_pos[[0, 2]] - goal_transform.position[[0, 2]])
+            dist = np.linalg.norm(ball_pos - goal_transform.position)
             if dist < goal_trigger.radius:
                 success, reward = goal_trigger.trigger(self._time)
                 if success:
@@ -442,7 +440,7 @@ class World:
             if tp_transform is None or tp_trigger is None:
                 continue
             
-            dist = np.linalg.norm(ball_pos[[0, 2]] - tp_transform.position[[0, 2]])
+            dist = np.linalg.norm(ball_pos - tp_transform.position)
             if dist < tp_trigger.radius and tp_trigger.can_trigger(self._time):
                 if tp_trigger.target_position is not None:
                     success, reward = tp_trigger.trigger(self._time)
@@ -472,7 +470,7 @@ class World:
             if lock_trigger.is_unlocked:
                 continue
             
-            dist = np.linalg.norm(ball_pos[[0, 2]] - lock_transform.position[[0, 2]])
+            dist = np.linalg.norm(ball_pos - lock_transform.position)
             if dist < lock_trigger.radius:
                 # Check if player has key
                 if ball_inventory and lock_trigger.required_key_id:
@@ -496,9 +494,9 @@ class World:
         ball_transform: TransformComponent,
         ball_inventory: InventoryComponent
     ) -> List[Dict]:
-        """Check và thu thập coins/keys"""
+        """Check và thu thập coins/keys (2D)"""
         collected = []
-        ball_pos = ball_transform.position
+        ball_pos = ball_transform.position  # Already 2D
         
         # Check coins
         for coin in self._entities_by_type[EntityType.COIN]:
@@ -510,7 +508,7 @@ class World:
             if coin_transform is None or coin_collect is None:
                 continue
             
-            dist = np.linalg.norm(ball_pos[[0, 2]] - coin_transform.position[[0, 2]])
+            dist = np.linalg.norm(ball_pos - coin_transform.position)
             if dist < 0.5:  # Collection radius
                 value = coin_collect.collect()
                 if value > 0 and ball_inventory:
@@ -536,7 +534,7 @@ class World:
             if key_transform is None or key_collect is None:
                 continue
             
-            dist = np.linalg.norm(ball_pos[[0, 2]] - key_transform.position[[0, 2]])
+            dist = np.linalg.norm(ball_pos - key_transform.position)
             if dist < 0.5:
                 key_id = key_collect.key_id
                 key_collect.collect()
@@ -558,7 +556,7 @@ class World:
     
     def get_state_snapshot(self) -> Dict:
         """
-        Serialize toàn bộ world state cho frontend / observation.
+        Serialize toàn bộ world state cho frontend / observation (2D).
         """
         ball_data = None
         if self._ball and self._ball.active:
@@ -567,8 +565,8 @@ class World:
             ball_inventory = self._ball.get_component(InventoryComponent)
             
             ball_data = {
-                'position': ball_transform.position.tolist() if ball_transform else [0, 0, 0],
-                'velocity': ball_physics.velocity.tolist() if ball_physics else [0, 0, 0],
+                'position': ball_transform.position.tolist() if ball_transform else [0, 0],
+                'velocity': ball_physics.velocity.tolist() if ball_physics else [0, 0],
                 'radius': ball_physics.radius if ball_physics else 0.5,
                 'inventory': ball_inventory.to_dict() if ball_inventory else {}
             }

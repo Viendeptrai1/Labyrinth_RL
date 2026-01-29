@@ -1,5 +1,5 @@
 """
-LabyrinthEnv - Gym-style Environment API
+LabyrinthEnv - Gym-style Environment API (2D)
 Main interface cho RL training và game play
 """
 from __future__ import annotations
@@ -63,15 +63,15 @@ DIRECTION_MAP = {
 
 class LabyrinthEnv:
     """
-    Labyrinth 3D Environment - Gym-compatible API.
+    Labyrinth 2D Environment - Gym-compatible API.
     
     Observation space (continuous):
-        - ball_pos (x, z): 2
-        - ball_vel (vx, vz): 2 (if include_velocity)
+        - ball_pos (x, y): 2
+        - ball_vel (vx, vy): 2 (if include_velocity)
         - board_tilt (pitch, roll): 2 (if include_tilt)
-        - goal_direction (dx, dz): 2
+        - goal_direction (dx, dy): 2
         - goal_distance: 1
-        - nearest_hole_direction (dx, dz): 2 (if include_distances)
+        - nearest_hole_direction (dx, dy): 2 (if include_distances)
         - nearest_hole_distance: 1 (if include_distances)
         - inventory (num_keys, num_coins, score): 3
         Total: 15 features (default config)
@@ -275,7 +275,7 @@ class LabyrinthEnv:
     # ==================== Observation ====================
     
     def _get_observation(self) -> np.ndarray:
-        """Build observation vector"""
+        """Build observation vector (2D)"""
         obs = []
         
         ball = self.world.ball
@@ -286,8 +286,8 @@ class LabyrinthEnv:
         ball_physics = ball.get_component(PhysicsComponent)
         ball_inventory = ball.get_component(InventoryComponent)
         
-        # Ball position (normalized to board size)
-        ball_pos = ball_transform.position[[0, 2]]  # x, z
+        # Ball position (normalized to board size) - already 2D
+        ball_pos = ball_transform.position  # (x, y)
         if self.config.obs_normalize:
             ball_pos = ball_pos / np.array([
                 self.world.board_config.width / 2,
@@ -295,9 +295,9 @@ class LabyrinthEnv:
             ])
         obs.extend(ball_pos)
         
-        # Ball velocity
+        # Ball velocity - already 2D
         if self.config.obs_include_velocity:
-            vel = ball_physics.velocity[[0, 2]]
+            vel = ball_physics.velocity  # (vx, vy)
             if self.config.obs_normalize:
                 vel = vel / 5.0  # Normalize to reasonable range
             obs.extend(vel)
@@ -310,12 +310,12 @@ class LabyrinthEnv:
                 roll = roll / self.config.max_tilt
             obs.extend([pitch, roll])
         
-        # Goal direction and distance
+        # Goal direction and distance (2D)
         goal_entities = self.world.get_entities_by_type(EntityType.GOAL)
         if goal_entities:
             goal_transform = goal_entities[0].get_component(TransformComponent)
-            goal_pos = goal_transform.position[[0, 2]]
-            direction = goal_pos - ball_transform.position[[0, 2]]
+            goal_pos = goal_transform.position  # Already 2D
+            direction = goal_pos - ball_transform.position
             distance = np.linalg.norm(direction)
             
             if distance > 0:
@@ -329,19 +329,19 @@ class LabyrinthEnv:
         else:
             obs.extend([0.0, 0.0, 0.0])
         
-        # Nearest hole (if include_distances)
+        # Nearest hole (if include_distances) - 2D
         if self.config.obs_include_distances:
             holes = self.world.get_entities_by_type(EntityType.HOLE)
             if holes:
                 min_dist = float('inf')
                 nearest_dir = np.zeros(2)
-                ball_pos_2d = ball_transform.position[[0, 2]]
+                ball_pos_2d = ball_transform.position  # Already 2D
                 
                 for hole in holes:
                     if not hole.active:
                         continue
                     hole_transform = hole.get_component(TransformComponent)
-                    hole_pos = hole_transform.position[[0, 2]]
+                    hole_pos = hole_transform.position  # Already 2D
                     dist = np.linalg.norm(hole_pos - ball_pos_2d)
                     if dist < min_dist:
                         min_dist = dist
@@ -421,15 +421,15 @@ class LabyrinthEnv:
         return reward
     
     def _get_goal_distance(self) -> float:
-        """Calculate distance từ ball đến goal"""
+        """Calculate distance từ ball đến goal (2D)"""
         ball = self.world.ball
         goals = self.world.get_entities_by_type(EntityType.GOAL)
         
         if ball is None or not goals:
             return 0.0
         
-        ball_pos = ball.get_component(TransformComponent).position[[0, 2]]
-        goal_pos = goals[0].get_component(TransformComponent).position[[0, 2]]
+        ball_pos = ball.get_component(TransformComponent).position  # Already 2D
+        goal_pos = goals[0].get_component(TransformComponent).position  # Already 2D
         
         return np.linalg.norm(goal_pos - ball_pos)
     
@@ -494,7 +494,7 @@ class LabyrinthEnv:
     
     def move_direction(self, direction: str, num_steps: int = None) -> Tuple[np.ndarray, float, bool, bool, Dict]:
         """
-        Di chuyển ball theo hướng với momentum.
+        Di chuyển ball theo hướng với momentum (2D).
         
         Args:
             direction: 'up', 'down', 'left', 'right', 'upleft', 'upright', 'downleft', 'downright', 'none'

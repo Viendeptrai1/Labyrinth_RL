@@ -1,5 +1,5 @@
 """
-LevelSpec - Level definition và loader
+LevelSpec - Level definition và loader (2D)
 Load level từ JSON files, validate và spawn entities
 """
 from __future__ import annotations
@@ -16,7 +16,7 @@ from .core.world import World, BoardConfig
 @dataclass
 class LevelSpec:
     """
-    Specification cho 1 level.
+    Specification cho 1 level (2D).
     Có thể serialize/deserialize từ JSON.
     """
     id: str
@@ -28,11 +28,11 @@ class LevelSpec:
     board_height: float = 10.0
     max_tilt: float = 0.15
     
-    # Ball start position
-    ball_start: tuple = (0.0, 0.0)  # (x, z) on board
+    # Ball start position (x, y) on board
+    ball_start: tuple = (0.0, 0.0)
     ball_radius: float = 0.3
     
-    # Goal position
+    # Goal position (x, y)
     goal_position: tuple = (0.0, 0.0)
     goal_radius: float = 0.5
     
@@ -143,7 +143,7 @@ class LevelSpec:
 
 class LevelLoader:
     """
-    Load levels và spawn entities vào World.
+    Load levels và spawn entities vào World (2D).
     Quản lý curriculum (danh sách levels theo thứ tự difficulty).
     """
     
@@ -205,7 +205,7 @@ class LevelLoader:
         return self.spawn_from_spec(spec, world)
     
     def spawn_from_spec(self, spec: LevelSpec, world: World) -> bool:
-        """Spawn entities từ LevelSpec vào World"""
+        """Spawn entities từ LevelSpec vào World (2D)"""
         # Clear world
         world.clear()
         world.reset_time()
@@ -215,100 +215,97 @@ class LevelLoader:
         world.board_config.height = spec.board_height
         world.board_config.max_tilt = spec.max_tilt
         
-        # Spawn ball
+        # Spawn ball (2D position)
         ball = EntityFactory.create(
             'ball',
-            position=(spec.ball_start[0], spec.ball_radius, spec.ball_start[1]),
+            position=(spec.ball_start[0], spec.ball_start[1]),
             radius=spec.ball_radius
         )
         world.add_entity(ball)
         
-        # Spawn goal
+        # Spawn goal (2D position)
         goal = EntityFactory.create(
             'goal',
-            position=(spec.goal_position[0], 0.0, spec.goal_position[1]),
+            position=(spec.goal_position[0], spec.goal_position[1]),
             radius=spec.goal_radius,
             reward=spec.goal_reward
         )
         world.add_entity(goal)
         
-        # Spawn walls
+        # Spawn walls (2D)
         for wall_data in spec.walls:
-            pos = wall_data.get('position', [0, 0, 0])
-            if len(pos) == 2:
-                pos = [pos[0], 0.5, pos[1]]
-            size = wall_data.get('size', [0.5, 0.5, 0.5])
+            pos = wall_data.get('position', [0, 0])
+            # Ensure 2D position
+            pos = (pos[0], pos[1]) if len(pos) >= 2 else (pos[0], 0)
+            size = wall_data.get('size', [0.5, 0.5])
+            # Ensure 2D size
+            size = (size[0], size[1]) if len(size) >= 2 else (size[0], size[0])
             
-            wall = EntityFactory.create('wall', position=tuple(pos), size=tuple(size))
+            wall = EntityFactory.create('wall', position=pos, size=size)
             world.add_entity(wall)
         
-        # Spawn holes
+        # Spawn holes (2D)
         for hole_data in spec.holes:
             pos = hole_data.get('position', [0, 0])
-            if len(pos) == 2:
-                pos = [pos[0], 0, pos[1]]
+            pos = (pos[0], pos[1]) if len(pos) >= 2 else (pos[0], 0)
             radius = hole_data.get('radius', 0.4)
             
             hole = EntityFactory.create(
                 'hole',
-                position=tuple(pos),
+                position=pos,
                 radius=radius,
                 penalty=spec.hole_penalty
             )
             world.add_entity(hole)
         
-        # Spawn coins
+        # Spawn coins (2D)
         for coin_data in spec.coins:
             pos = coin_data.get('position', [0, 0])
-            if len(pos) == 2:
-                pos = [pos[0], 0.2, pos[1]]
+            pos = (pos[0], pos[1]) if len(pos) >= 2 else (pos[0], 0)
             value = coin_data.get('value', spec.coin_value)
             
-            coin = EntityFactory.create('coin', position=tuple(pos), value=value)
+            coin = EntityFactory.create('coin', position=pos, value=value)
             world.add_entity(coin)
         
-        # Spawn keys
+        # Spawn keys (2D)
         for key_data in spec.keys:
             pos = key_data.get('position', [0, 0])
-            if len(pos) == 2:
-                pos = [pos[0], 0.2, pos[1]]
+            pos = (pos[0], pos[1]) if len(pos) >= 2 else (pos[0], 0)
             key_id = key_data.get('key_id', 'key_1')
             
-            key = EntityFactory.create('key', position=tuple(pos), key_id=key_id)
+            key = EntityFactory.create('key', position=pos, key_id=key_id)
             world.add_entity(key)
         
-        # Spawn locks
+        # Spawn locks (2D)
         for lock_data in spec.locks:
-            pos = lock_data.get('position', [0, 0, 0])
-            if len(pos) == 2:
-                pos = [pos[0], 0.5, pos[1]]
+            pos = lock_data.get('position', [0, 0])
+            pos = (pos[0], pos[1]) if len(pos) >= 2 else (pos[0], 0)
             required_key = lock_data.get('required_key_id', 'key_1')
-            size = lock_data.get('size', [0.5, 0.5, 0.5])
+            size = lock_data.get('size', [0.5, 0.5])
+            size = (size[0], size[1]) if len(size) >= 2 else (size[0], size[0])
             
             lock = EntityFactory.create(
                 'lock',
-                position=tuple(pos),
+                position=pos,
                 required_key_id=required_key,
-                size=tuple(size)
+                size=size
             )
             world.add_entity(lock)
         
-        # Spawn teleports (pairs)
+        # Spawn teleports (2D)
         for tp_data in spec.teleports:
             pos = tp_data.get('position', [0, 0])
-            if len(pos) == 2:
-                pos = [pos[0], 0.0, pos[1]]
+            pos = (pos[0], pos[1]) if len(pos) >= 2 else (pos[0], 0)
             target = tp_data.get('target', [0, 0])
-            if len(target) == 2:
-                target = [target[0], 0.3, target[1]]
+            target = (target[0], target[1]) if len(target) >= 2 else (target[0], 0)
             pair_id = tp_data.get('pair_id', None)
             radius = tp_data.get('radius', 0.4)
             cooldown = tp_data.get('cooldown', 1.5)
             
             teleport = EntityFactory.create(
                 'teleport',
-                position=tuple(pos),
-                target_position=tuple(target),
+                position=pos,
+                target_position=target,
                 pair_id=pair_id,
                 radius=radius,
                 cooldown=cooldown
@@ -318,25 +315,22 @@ class LevelLoader:
         return True
 
 
-# ==================== Built-in Levels ====================
+# ==================== Built-in Levels (2D) ====================
 
 def create_tutorial_level() -> LevelSpec:
-    """Level 1: Tutorial - straight path to goal"""
+    """Level 1: Tutorial - straight path to goal (no obstacles)"""
     return LevelSpec(
         id='level_01_tutorial',
         name='Tutorial',
         difficulty=1,
         board_width=8.0,
         board_height=8.0,
-        ball_start=(-3.0, 0.0),
-        goal_position=(3.0, 0.0),
-        goal_radius=0.6,
-        walls=[
-            {'position': [0, -3], 'size': [4.0, 0.5, 0.2]},
-            {'position': [0, 3], 'size': [4.0, 0.5, 0.2]},
-        ],
-        description='Đưa bi vào lỗ. Dùng WASD hoặc phím mũi tên để nghiêng bàn.',
-        hints=['Nghiêng bàn sang phải để bi lăn về phía goal']
+        ball_start=(-2.5, 0.0),
+        goal_position=(2.5, 0.0),
+        goal_radius=0.7,
+        walls=[],  # No walls for tutorial
+        description='Đưa bi vào lỗ xanh. Click board rồi dùng WASD để điều khiển.',
+        hints=['Nhấn D hoặc phím phải để đẩy bi sang goal']
     )
 
 
@@ -352,11 +346,11 @@ def create_simple_maze_level() -> LevelSpec:
         goal_position=(4.0, 4.0),
         walls=[
             # Horizontal walls
-            {'position': [0, -2], 'size': [3.0, 0.5, 0.2]},
-            {'position': [0, 2], 'size': [3.0, 0.5, 0.2]},
+            {'position': [0, -2], 'size': [3.0, 0.2]},
+            {'position': [0, 2], 'size': [3.0, 0.2]},
             # Vertical walls
-            {'position': [-2, 0], 'size': [0.2, 0.5, 2.0]},
-            {'position': [2, 0], 'size': [0.2, 0.5, 2.0]},
+            {'position': [-2, 0], 'size': [0.2, 2.0]},
+            {'position': [2, 0], 'size': [0.2, 2.0]},
         ],
         coins=[
             {'position': [0, 0], 'value': 100},
@@ -401,13 +395,13 @@ def create_key_lock_level() -> LevelSpec:
         ball_start=(-4.0, -4.0),
         goal_position=(4.0, 4.0),
         walls=[
-            {'position': [2, 0], 'size': [0.2, 0.5, 4.0]},
+            {'position': [2, 0], 'size': [0.2, 4.0]},
         ],
         keys=[
             {'position': [-2, 2], 'key_id': 'gold_key'},
         ],
         locks=[
-            {'position': [2, 2], 'required_key_id': 'gold_key', 'size': [0.3, 0.5, 0.5]},
+            {'position': [2, 2], 'required_key_id': 'gold_key', 'size': [0.3, 0.5]},
         ],
         coins=[
             {'position': [0, 0], 'value': 100},
@@ -429,7 +423,7 @@ def create_teleport_level() -> LevelSpec:
         goal_position=(5.0, 5.0),
         walls=[
             # Barrier in the middle
-            {'position': [0, 0], 'size': [5.0, 0.5, 0.3]},
+            {'position': [0, 0], 'size': [5.0, 0.3]},
         ],
         teleports=[
             {'position': [-3, -2], 'target': [3, 2], 'pair_id': 'tp1'},
