@@ -1,0 +1,434 @@
+{
+  "paragraphs": [
+    {
+      "title": "1. Setup",
+      "text": "%pyspark\nimport sys\nsys.path.insert(0, \u0027/src\u0027)\n\nimport numpy as np\nfrom labyrinth_env import LabyrinthEnv, ZeppelinBridge\nfrom labyrinth_env.env import EnvConfig\n\nprint(\"Labyrinth RL - 2D Game\")\nprint(\"\u003d\"*40)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:13.114",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9.0,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Labyrinth RL - 2D Game\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949459_1023171707",
+      "id": "para_setup",
+      "dateCreated": "2026-01-29 09:29:09.459",
+      "dateStarted": "2026-01-29 09:29:13.155",
+      "dateFinished": "2026-01-29 09:29:13.218",
+      "status": "FINISHED"
+    },
+    {
+      "title": "2. Initialize Game",
+      "text": "%pyspark\nconfig \u003d EnvConfig(\n    dt\u003d1.0/60.0,\n    max_steps\u003d5000,\n    steps_per_move\u003d15\n)\n\nbridge \u003d ZeppelinBridge(z, config\u003dconfig)\nresult \u003d bridge.init_game(\u0027level_01_tutorial\u0027)\n\nstate \u003d bridge.get_state()\nz.angularBind(\u0027state\u0027, state)\nz.angularBind(\u0027ball\u0027, state.get(\u0027ball\u0027, {}))\nz.angularBind(\u0027status\u0027, \u0027Ready!\u0027)\nz.angularBind(\u0027step_count\u0027, 0)\n\nprint(f\"Level: {result[\u0027info\u0027][\u0027level_id\u0027]}\")\nprint(f\"Ball: {state[\u0027ball\u0027][\u0027position\u0027]}\")\nprint(\u0027Click board, then use WASD to play!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:13.252",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/python",
+        "fontSize": 9.0,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Level: level_01_tutorial\nBall: [-4.0, 0.0]\nClick board, then use WASD to play!\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949461_46197774",
+      "id": "para_init",
+      "dateCreated": "2026-01-29 09:29:09.461",
+      "dateStarted": "2026-01-29 09:29:13.256",
+      "dateFinished": "2026-01-29 09:29:13.313",
+      "status": "FINISHED"
+    },
+    {
+      "title": "3. Game UI",
+      "text": "%angular\n\u003cstyle\u003e\n    .game-container { display: flex; gap: 25px; padding: 15px; font-family: Arial; user-select: none; }\n    .board-view {\n        position: relative; width: 540px; height: 540px;\n        background: linear-gradient(135deg, #DEB887, #D2B48C);\n        border: 12px solid #8B4513; border-radius: 10px;\n        box-shadow: inset 0 0 30px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.3);\n        outline: none;\n    }\n    .board-view:focus { border-color: #28a745; box-shadow: 0 0 0 5px rgba(40,167,69,0.6), inset 0 0 30px rgba(0,0,0,0.3); }\n    .ball {\n        position: absolute; width: 28px; height: 28px;\n        background: radial-gradient(circle at 30% 30%, #fff, #bbb, #666);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: 4px 4px 8px rgba(0,0,0,0.5);\n    }\n    .goal {\n        position: absolute; width: 44px; height: 44px;\n        background: radial-gradient(circle, #000 35%, #222 55%, #000);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: inset 0 0 12px rgba(0,255,0,0.3);\n    }\n    .goal::after {\n        content: \u0027\u0027; position: absolute; top: 50%; left: 50%;\n        width: 22px; height: 22px;\n        background: radial-gradient(circle, #0f0, #080);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        animation: pulse 1s infinite;\n    }\n    @keyframes pulse { 0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1);} 50%{opacity:0.5;transform:translate(-50%,-50%) scale(0.7);} }\n    .wall {\n        position: absolute;\n        background: linear-gradient(180deg, #A0522D, #8B4513, #6B3410);\n        border: 2px solid #4A2508; border-radius: 4px;\n        box-shadow: 2px 2px 4px rgba(0,0,0,0.4);\n    }\n    .hole {\n        position: absolute;\n        background: radial-gradient(circle, #000 60%, #333);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: inset 0 0 12px #000;\n    }\n    .coin {\n        position: absolute; width: 22px; height: 22px;\n        background: radial-gradient(circle at 30% 30%, #ffd700, #daa520, #b8860b);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: 0 0 10px #ffd700, 0 2px 4px rgba(0,0,0,0.3);\n    }\n    .controls { padding: 20px; background: #f8f9fa; border-radius: 10px; min-width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }\n    .hud { padding: 15px; background: #1a1a1a; color: #0f0; font-family: \u0027Courier New\u0027, monospace; border-radius: 8px; margin-bottom: 18px; font-size: 16px; }\n    .direction-pad { display: grid; grid-template-columns: repeat(3, 65px); gap: 6px; justify-content: center; }\n    .dir-btn {\n        width: 65px; height: 65px; font-size: 24px; font-weight: bold;\n        cursor: pointer; border: 2px solid #444; border-radius: 10px;\n        background: linear-gradient(180deg, #fff, #e5e5e5);\n        transition: all 0.1s;\n    }\n    .dir-btn:hover { background: linear-gradient(180deg, #e0f0ff, #b8d4f0); border-color: #007bff; transform: scale(1.02); }\n    .dir-btn:active { background: #28a745 !important; color: white !important; transform: scale(0.95); }\n    .status-success { color: #0f0; font-size: 22px; font-weight: bold; text-shadow: 0 0 10px #0f0; }\n    .status-failed { color: #f00; font-size: 22px; font-weight: bold; }\n    .hint { margin-top:15px; padding:12px; background:#e9ecef; border-radius:6px; font-size:14px; line-height: 1.6; }\n\u003c/style\u003e\n\n\u003cdiv class\u003d\"game-container\"\u003e\n    \u003cdiv class\u003d\"board-view\" tabindex\u003d\"0\"\n         ng-keydown\u003d\"\n            $event.preventDefault();\n            (($event.key\u003d\u003d\u0027w\u0027||$event.key\u003d\u003d\u0027W\u0027||$event.key\u003d\u003d\u0027ArrowUp\u0027) \u0026\u0026 z.runParagraph(\u0027para_up\u0027));\n            (($event.key\u003d\u003d\u0027s\u0027||$event.key\u003d\u003d\u0027S\u0027||$event.key\u003d\u003d\u0027ArrowDown\u0027) \u0026\u0026 z.runParagraph(\u0027para_down\u0027));\n            (($event.key\u003d\u003d\u0027a\u0027||$event.key\u003d\u003d\u0027A\u0027||$event.key\u003d\u003d\u0027ArrowLeft\u0027) \u0026\u0026 z.runParagraph(\u0027para_left\u0027));\n            (($event.key\u003d\u003d\u0027d\u0027||$event.key\u003d\u003d\u0027D\u0027||$event.key\u003d\u003d\u0027ArrowRight\u0027) \u0026\u0026 z.runParagraph(\u0027para_right\u0027));\n            (($event.key\u003d\u003d\u0027q\u0027||$event.key\u003d\u003d\u0027Q\u0027) \u0026\u0026 z.runParagraph(\u0027para_upleft\u0027));\n            (($event.key\u003d\u003d\u0027e\u0027||$event.key\u003d\u003d\u0027E\u0027) \u0026\u0026 z.runParagraph(\u0027para_upright\u0027));\n            (($event.key\u003d\u003d\u0027z\u0027||$event.key\u003d\u003d\u0027Z\u0027) \u0026\u0026 z.runParagraph(\u0027para_downleft\u0027));\n            (($event.key\u003d\u003d\u0027c\u0027||$event.key\u003d\u003d\u0027C\u0027) \u0026\u0026 z.runParagraph(\u0027para_downright\u0027));\n            (($event.key\u003d\u003d\u0027r\u0027||$event.key\u003d\u003d\u0027R\u0027) \u0026\u0026 z.runParagraph(\u0027para_reset\u0027));\n         \"\u003e\n        \u003c!-- Goal --\u003e\n        \u003cdiv class\u003d\"goal\" ng-repeat\u003d\"e in state.entities\" ng-if\u003d\"e.type\u003d\u003d\u0027GOAL\u0027\"\n             ng-style\u003d\"{left: (270 + e.components.TransformComponent.position[0] * 45) + \u0027px\u0027, \n                        top: (270 - e.components.TransformComponent.position[1] * 45) + \u0027px\u0027}\"\u003e\u003c/div\u003e\n        \u003c!-- Walls --\u003e\n        \u003cdiv class\u003d\"wall\" ng-repeat\u003d\"e in state.entities\" ng-if\u003d\"e.type\u003d\u003d\u0027WALL\u0027\"\n             ng-style\u003d\"{left: (270 + e.components.TransformComponent.position[0]*45 - e.components.TransformComponent.scale[0]*22.5) + \u0027px\u0027,\n                        top: (270 - e.components.TransformComponent.position[1]*45 - e.components.TransformComponent.scale[1]*22.5) + \u0027px\u0027,\n                        width: e.components.TransformComponent.scale[0]*45 + \u0027px\u0027,\n                        height: e.components.TransformComponent.scale[1]*45 + \u0027px\u0027}\"\u003e\u003c/div\u003e\n        \u003c!-- Holes --\u003e\n        \u003cdiv class\u003d\"hole\" ng-repeat\u003d\"e in state.entities\" ng-if\u003d\"e.type\u003d\u003d\u0027HOLE\u0027\"\n             ng-style\u003d\"{left: (270 + e.components.TransformComponent.position[0]*45) + \u0027px\u0027,\n                        top: (270 - e.components.TransformComponent.position[1]*45) + \u0027px\u0027,\n                        width: e.components.TransformComponent.scale[0]*45 + \u0027px\u0027,\n                        height: e.components.TransformComponent.scale[1]*45 + \u0027px\u0027}\"\u003e\u003c/div\u003e\n        \u003c!-- Coins --\u003e\n        \u003cdiv class\u003d\"coin\" ng-repeat\u003d\"e in state.entities\" ng-if\u003d\"e.type\u003d\u003d\u0027COIN\u0027\"\n             ng-style\u003d\"{left: (270 + e.components.TransformComponent.position[0]*45) + \u0027px\u0027,\n                        top: (270 - e.components.TransformComponent.position[1]*45) + \u0027px\u0027}\"\u003e\u003c/div\u003e\n        \u003c!-- Ball --\u003e\n        \u003cdiv class\u003d\"ball\" ng-if\u003d\"ball.position\"\n             ng-style\u003d\"{left: (270 + ball.position[0] * 45) + \u0027px\u0027, top: (270 - ball.position[1] * 45) + \u0027px\u0027}\"\u003e\u003c/div\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv class\u003d\"controls\"\u003e\n        \u003cdiv class\u003d\"hud\"\u003e\n            \u003cdiv\u003eScore: {{ball.inventory.total_score || 0}}\u003c/div\u003e\n            \u003cdiv\u003eSteps: {{step_count}}\u003c/div\u003e\n            \u003cdiv ng-class\u003d\"{\u0027status-success\u0027: status\u003d\u003d\u0027SUCCESS!\u0027, \u0027status-failed\u0027: status\u003d\u003d\u0027FAILED!\u0027}\"\u003e{{status}}\u003c/div\u003e\n        \u003c/div\u003e\n        \n        \u003cdiv class\u003d\"direction-pad\"\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_upleft\u0027)\"\u003e\u0026#8598;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_up\u0027)\"\u003e\u0026#9650;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_upright\u0027)\"\u003e\u0026#8599;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_left\u0027)\"\u003e\u0026#9664;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_reset\u0027)\" style\u003d\"background:#ffc107;\"\u003e\u0026#8635;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_right\u0027)\"\u003e\u0026#9654;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_downleft\u0027)\"\u003e\u0026#8601;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_down\u0027)\"\u003e\u0026#9660;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_downright\u0027)\"\u003e\u0026#8600;\u003c/button\u003e\n        \u003c/div\u003e\n        \n        \u003cdiv class\u003d\"hint\"\u003e\n            \u003cb\u003eClick board first!\u003c/b\u003e\u003cbr\u003e\n            WASD / Arrows \u003d Move\u003cbr\u003e\n            Q/E/Z/C \u003d Diagonal\u003cbr\u003e\n            R \u003d Reset\u003cbr\u003e\n            \u003cb\u003eGoal:\u003c/b\u003e Reach green hole!\n        \u003c/div\u003e\n    \u003c/div\u003e\n\u003c/div\u003e",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:13.356",
+      "progress": 0,
+      "config": {
+        "editorSetting": {
+          "language": "text",
+          "editOnDblClick": false
+        },
+        "colWidth": 12.0,
+        "editorMode": "ace/mode/text",
+        "fontSize": 9.0,
+        "results": {},
+        "enabled": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "ANGULAR",
+            "data": "\n\u003cstyle\u003e\n    .game-container { display: flex; gap: 25px; padding: 15px; font-family: Arial; user-select: none; }\n    .board-view {\n        position: relative; width: 540px; height: 540px;\n        background: linear-gradient(135deg, #DEB887, #D2B48C);\n        border: 12px solid #8B4513; border-radius: 10px;\n        box-shadow: inset 0 0 30px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.3);\n        outline: none;\n    }\n    .board-view:focus { border-color: #28a745; box-shadow: 0 0 0 5px rgba(40,167,69,0.6), inset 0 0 30px rgba(0,0,0,0.3); }\n    .ball {\n        position: absolute; width: 28px; height: 28px;\n        background: radial-gradient(circle at 30% 30%, #fff, #bbb, #666);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: 4px 4px 8px rgba(0,0,0,0.5);\n    }\n    .goal {\n        position: absolute; width: 44px; height: 44px;\n        background: radial-gradient(circle, #000 35%, #222 55%, #000);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: inset 0 0 12px rgba(0,255,0,0.3);\n    }\n    .goal::after {\n        content: \u0027\u0027; position: absolute; top: 50%; left: 50%;\n        width: 22px; height: 22px;\n        background: radial-gradient(circle, #0f0, #080);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        animation: pulse 1s infinite;\n    }\n    @keyframes pulse { 0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1);} 50%{opacity:0.5;transform:translate(-50%,-50%) scale(0.7);} }\n    .wall {\n        position: absolute;\n        background: linear-gradient(180deg, #A0522D, #8B4513, #6B3410);\n        border: 2px solid #4A2508; border-radius: 4px;\n        box-shadow: 2px 2px 4px rgba(0,0,0,0.4);\n    }\n    .hole {\n        position: absolute;\n        background: radial-gradient(circle, #000 60%, #333);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: inset 0 0 12px #000;\n    }\n    .coin {\n        position: absolute; width: 22px; height: 22px;\n        background: radial-gradient(circle at 30% 30%, #ffd700, #daa520, #b8860b);\n        border-radius: 50%; transform: translate(-50%, -50%);\n        box-shadow: 0 0 10px #ffd700, 0 2px 4px rgba(0,0,0,0.3);\n    }\n    .controls { padding: 20px; background: #f8f9fa; border-radius: 10px; min-width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }\n    .hud { padding: 15px; background: #1a1a1a; color: #0f0; font-family: \u0027Courier New\u0027, monospace; border-radius: 8px; margin-bottom: 18px; font-size: 16px; }\n    .direction-pad { display: grid; grid-template-columns: repeat(3, 65px); gap: 6px; justify-content: center; }\n    .dir-btn {\n        width: 65px; height: 65px; font-size: 24px; font-weight: bold;\n        cursor: pointer; border: 2px solid #444; border-radius: 10px;\n        background: linear-gradient(180deg, #fff, #e5e5e5);\n        transition: all 0.1s;\n    }\n    .dir-btn:hover { background: linear-gradient(180deg, #e0f0ff, #b8d4f0); border-color: #007bff; transform: scale(1.02); }\n    .dir-btn:active { background: #28a745 !important; color: white !important; transform: scale(0.95); }\n    .status-success { color: #0f0; font-size: 22px; font-weight: bold; text-shadow: 0 0 10px #0f0; }\n    .status-failed { color: #f00; font-size: 22px; font-weight: bold; }\n    .hint { margin-top:15px; padding:12px; background:#e9ecef; border-radius:6px; font-size:14px; line-height: 1.6; }\n\u003c/style\u003e\n\n\u003cdiv class\u003d\"game-container\"\u003e\n    \u003cdiv class\u003d\"board-view\" tabindex\u003d\"0\"\n         ng-keydown\u003d\"\n            $event.preventDefault();\n            (($event.key\u003d\u003d\u0027w\u0027||$event.key\u003d\u003d\u0027W\u0027||$event.key\u003d\u003d\u0027ArrowUp\u0027) \u0026\u0026 z.runParagraph(\u0027para_up\u0027));\n            (($event.key\u003d\u003d\u0027s\u0027||$event.key\u003d\u003d\u0027S\u0027||$event.key\u003d\u003d\u0027ArrowDown\u0027) \u0026\u0026 z.runParagraph(\u0027para_down\u0027));\n            (($event.key\u003d\u003d\u0027a\u0027||$event.key\u003d\u003d\u0027A\u0027||$event.key\u003d\u003d\u0027ArrowLeft\u0027) \u0026\u0026 z.runParagraph(\u0027para_left\u0027));\n            (($event.key\u003d\u003d\u0027d\u0027||$event.key\u003d\u003d\u0027D\u0027||$event.key\u003d\u003d\u0027ArrowRight\u0027) \u0026\u0026 z.runParagraph(\u0027para_right\u0027));\n            (($event.key\u003d\u003d\u0027q\u0027||$event.key\u003d\u003d\u0027Q\u0027) \u0026\u0026 z.runParagraph(\u0027para_upleft\u0027));\n            (($event.key\u003d\u003d\u0027e\u0027||$event.key\u003d\u003d\u0027E\u0027) \u0026\u0026 z.runParagraph(\u0027para_upright\u0027));\n            (($event.key\u003d\u003d\u0027z\u0027||$event.key\u003d\u003d\u0027Z\u0027) \u0026\u0026 z.runParagraph(\u0027para_downleft\u0027));\n            (($event.key\u003d\u003d\u0027c\u0027||$event.key\u003d\u003d\u0027C\u0027) \u0026\u0026 z.runParagraph(\u0027para_downright\u0027));\n            (($event.key\u003d\u003d\u0027r\u0027||$event.key\u003d\u003d\u0027R\u0027) \u0026\u0026 z.runParagraph(\u0027para_reset\u0027));\n         \"\u003e\n        \u003c!-- Goal --\u003e\n        \u003cdiv class\u003d\"goal\" ng-repeat\u003d\"e in state.entities\" ng-if\u003d\"e.type\u003d\u003d\u0027GOAL\u0027\"\n             ng-style\u003d\"{left: (270 + e.components.TransformComponent.position[0] * 45) + \u0027px\u0027, \n                        top: (270 - e.components.TransformComponent.position[1] * 45) + \u0027px\u0027}\"\u003e\u003c/div\u003e\n        \u003c!-- Walls --\u003e\n        \u003cdiv class\u003d\"wall\" ng-repeat\u003d\"e in state.entities\" ng-if\u003d\"e.type\u003d\u003d\u0027WALL\u0027\"\n             ng-style\u003d\"{left: (270 + e.components.TransformComponent.position[0]*45 - e.components.TransformComponent.scale[0]*22.5) + \u0027px\u0027,\n                        top: (270 - e.components.TransformComponent.position[1]*45 - e.components.TransformComponent.scale[1]*22.5) + \u0027px\u0027,\n                        width: e.components.TransformComponent.scale[0]*45 + \u0027px\u0027,\n                        height: e.components.TransformComponent.scale[1]*45 + \u0027px\u0027}\"\u003e\u003c/div\u003e\n        \u003c!-- Holes --\u003e\n        \u003cdiv class\u003d\"hole\" ng-repeat\u003d\"e in state.entities\" ng-if\u003d\"e.type\u003d\u003d\u0027HOLE\u0027\"\n             ng-style\u003d\"{left: (270 + e.components.TransformComponent.position[0]*45) + \u0027px\u0027,\n                        top: (270 - e.components.TransformComponent.position[1]*45) + \u0027px\u0027,\n                        width: e.components.TransformComponent.scale[0]*45 + \u0027px\u0027,\n                        height: e.components.TransformComponent.scale[1]*45 + \u0027px\u0027}\"\u003e\u003c/div\u003e\n        \u003c!-- Coins --\u003e\n        \u003cdiv class\u003d\"coin\" ng-repeat\u003d\"e in state.entities\" ng-if\u003d\"e.type\u003d\u003d\u0027COIN\u0027\"\n             ng-style\u003d\"{left: (270 + e.components.TransformComponent.position[0]*45) + \u0027px\u0027,\n                        top: (270 - e.components.TransformComponent.position[1]*45) + \u0027px\u0027}\"\u003e\u003c/div\u003e\n        \u003c!-- Ball --\u003e\n        \u003cdiv class\u003d\"ball\" ng-if\u003d\"ball.position\"\n             ng-style\u003d\"{left: (270 + ball.position[0] * 45) + \u0027px\u0027, top: (270 - ball.position[1] * 45) + \u0027px\u0027}\"\u003e\u003c/div\u003e\n    \u003c/div\u003e\n    \n    \u003cdiv class\u003d\"controls\"\u003e\n        \u003cdiv class\u003d\"hud\"\u003e\n            \u003cdiv\u003eScore: {{ball.inventory.total_score || 0}}\u003c/div\u003e\n            \u003cdiv\u003eSteps: {{step_count}}\u003c/div\u003e\n            \u003cdiv ng-class\u003d\"{\u0027status-success\u0027: status\u003d\u003d\u0027SUCCESS!\u0027, \u0027status-failed\u0027: status\u003d\u003d\u0027FAILED!\u0027}\"\u003e{{status}}\u003c/div\u003e\n        \u003c/div\u003e\n        \n        \u003cdiv class\u003d\"direction-pad\"\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_upleft\u0027)\"\u003e\u0026#8598;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_up\u0027)\"\u003e\u0026#9650;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_upright\u0027)\"\u003e\u0026#8599;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_left\u0027)\"\u003e\u0026#9664;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_reset\u0027)\" style\u003d\"background:#ffc107;\"\u003e\u0026#8635;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_right\u0027)\"\u003e\u0026#9654;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_downleft\u0027)\"\u003e\u0026#8601;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_down\u0027)\"\u003e\u0026#9660;\u003c/button\u003e\n            \u003cbutton class\u003d\"dir-btn\" ng-click\u003d\"z.runParagraph(\u0027para_downright\u0027)\"\u003e\u0026#8600;\u003c/button\u003e\n        \u003c/div\u003e\n        \n        \u003cdiv class\u003d\"hint\"\u003e\n            \u003cb\u003eClick board first!\u003c/b\u003e\u003cbr\u003e\n            WASD / Arrows \u003d Move\u003cbr\u003e\n            Q/E/Z/C \u003d Diagonal\u003cbr\u003e\n            R \u003d Reset\u003cbr\u003e\n            \u003cb\u003eGoal:\u003c/b\u003e Reach green hole!\n        \u003c/div\u003e\n    \u003c/div\u003e\n\u003c/div\u003e"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949461_201783552",
+      "id": "para_ui",
+      "dateCreated": "2026-01-29 09:29:09.461",
+      "dateStarted": "2026-01-29 09:29:13.360",
+      "dateFinished": "2026-01-29 09:29:13.377",
+      "status": "FINISHED"
+    },
+    {
+      "title": "Up",
+      "text": "%pyspark\nr \u003d bridge.move_up()\nz.angularBind(\u0027state\u0027, bridge.get_state())\nz.angularBind(\u0027ball\u0027, bridge.get_state().get(\u0027ball\u0027, {}))\nz.angularBind(\u0027step_count\u0027, bridge.env._step_count)\nif r[\u0027done\u0027]: z.angularBind(\u0027status\u0027, \u0027SUCCESS!\u0027 if r[\u0027info\u0027].get(\u0027success\u0027) else \u0027FAILED!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:20.298",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949461_1939123099",
+      "id": "para_up",
+      "dateCreated": "2026-01-29 09:29:09.461",
+      "dateStarted": "2026-01-29 09:29:20.305",
+      "dateFinished": "2026-01-29 09:29:20.362",
+      "status": "FINISHED"
+    },
+    {
+      "title": "Down",
+      "text": "%pyspark\nr \u003d bridge.move_down()\nz.angularBind(\u0027state\u0027, bridge.get_state())\nz.angularBind(\u0027ball\u0027, bridge.get_state().get(\u0027ball\u0027, {}))\nz.angularBind(\u0027step_count\u0027, bridge.env._step_count)\nif r[\u0027done\u0027]: z.angularBind(\u0027status\u0027, \u0027SUCCESS!\u0027 if r[\u0027info\u0027].get(\u0027success\u0027) else \u0027FAILED!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:19.761",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949461_1984470615",
+      "id": "para_down",
+      "dateCreated": "2026-01-29 09:29:09.461",
+      "dateStarted": "2026-01-29 09:29:19.770",
+      "dateFinished": "2026-01-29 09:29:19.819",
+      "status": "FINISHED"
+    },
+    {
+      "title": "Left",
+      "text": "%pyspark\nr \u003d bridge.move_left()\nz.angularBind(\u0027state\u0027, bridge.get_state())\nz.angularBind(\u0027ball\u0027, bridge.get_state().get(\u0027ball\u0027, {}))\nz.angularBind(\u0027step_count\u0027, bridge.env._step_count)\nif r[\u0027done\u0027]: z.angularBind(\u0027status\u0027, \u0027SUCCESS!\u0027 if r[\u0027info\u0027].get(\u0027success\u0027) else \u0027FAILED!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:19.888",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949461_2044017675",
+      "id": "para_left",
+      "dateCreated": "2026-01-29 09:29:09.461",
+      "dateStarted": "2026-01-29 09:29:19.892",
+      "dateFinished": "2026-01-29 09:29:19.935",
+      "status": "FINISHED"
+    },
+    {
+      "title": "Right",
+      "text": "%pyspark\nr \u003d bridge.move_right()\nz.angularBind(\u0027state\u0027, bridge.get_state())\nz.angularBind(\u0027ball\u0027, bridge.get_state().get(\u0027ball\u0027, {}))\nz.angularBind(\u0027step_count\u0027, bridge.env._step_count)\nif r[\u0027done\u0027]: z.angularBind(\u0027status\u0027, \u0027SUCCESS!\u0027 if r[\u0027info\u0027].get(\u0027success\u0027) else \u0027FAILED!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:19.418",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949461_2117282049",
+      "id": "para_right",
+      "dateCreated": "2026-01-29 09:29:09.461",
+      "dateStarted": "2026-01-29 09:29:19.430",
+      "dateFinished": "2026-01-29 09:29:19.462",
+      "status": "FINISHED"
+    },
+    {
+      "title": "UpLeft",
+      "text": "%pyspark\nr \u003d bridge.move_upleft()\nz.angularBind(\u0027state\u0027, bridge.get_state())\nz.angularBind(\u0027ball\u0027, bridge.get_state().get(\u0027ball\u0027, {}))\nz.angularBind(\u0027step_count\u0027, bridge.env._step_count)\nif r[\u0027done\u0027]: z.angularBind(\u0027status\u0027, \u0027SUCCESS!\u0027 if r[\u0027info\u0027].get(\u0027success\u0027) else \u0027FAILED!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:13.881",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949462_1190979865",
+      "id": "para_upleft",
+      "dateCreated": "2026-01-29 09:29:09.462",
+      "dateStarted": "2026-01-29 09:29:13.884",
+      "dateFinished": "2026-01-29 09:29:13.918",
+      "status": "FINISHED"
+    },
+    {
+      "title": "UpRight",
+      "text": "%pyspark\nr \u003d bridge.move_upright()\nz.angularBind(\u0027state\u0027, bridge.get_state())\nz.angularBind(\u0027ball\u0027, bridge.get_state().get(\u0027ball\u0027, {}))\nz.angularBind(\u0027step_count\u0027, bridge.env._step_count)\nif r[\u0027done\u0027]: z.angularBind(\u0027status\u0027, \u0027SUCCESS!\u0027 if r[\u0027info\u0027].get(\u0027success\u0027) else \u0027FAILED!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:13.984",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949462_1857970976",
+      "id": "para_upright",
+      "dateCreated": "2026-01-29 09:29:09.462",
+      "dateStarted": "2026-01-29 09:29:13.987",
+      "dateFinished": "2026-01-29 09:29:14.031",
+      "status": "FINISHED"
+    },
+    {
+      "title": "DownLeft",
+      "text": "%pyspark\nr \u003d bridge.move_downleft()\nz.angularBind(\u0027state\u0027, bridge.get_state())\nz.angularBind(\u0027ball\u0027, bridge.get_state().get(\u0027ball\u0027, {}))\nz.angularBind(\u0027step_count\u0027, bridge.env._step_count)\nif r[\u0027done\u0027]: z.angularBind(\u0027status\u0027, \u0027SUCCESS!\u0027 if r[\u0027info\u0027].get(\u0027success\u0027) else \u0027FAILED!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:14.087",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949462_1858604579",
+      "id": "para_downleft",
+      "dateCreated": "2026-01-29 09:29:09.462",
+      "dateStarted": "2026-01-29 09:29:14.090",
+      "dateFinished": "2026-01-29 09:29:14.139",
+      "status": "FINISHED"
+    },
+    {
+      "title": "DownRight",
+      "text": "%pyspark\nr \u003d bridge.move_downright()\nz.angularBind(\u0027state\u0027, bridge.get_state())\nz.angularBind(\u0027ball\u0027, bridge.get_state().get(\u0027ball\u0027, {}))\nz.angularBind(\u0027step_count\u0027, bridge.env._step_count)\nif r[\u0027done\u0027]: z.angularBind(\u0027status\u0027, \u0027SUCCESS!\u0027 if r[\u0027info\u0027].get(\u0027success\u0027) else \u0027FAILED!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:14.190",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949462_1690241587",
+      "id": "para_downright",
+      "dateCreated": "2026-01-29 09:29:09.462",
+      "dateStarted": "2026-01-29 09:29:14.193",
+      "dateFinished": "2026-01-29 09:29:14.218",
+      "status": "FINISHED"
+    },
+    {
+      "title": "Reset",
+      "text": "%pyspark\nbridge.reset()\nstate \u003d bridge.get_state()\nz.angularBind(\u0027state\u0027, state)\nz.angularBind(\u0027ball\u0027, state.get(\u0027ball\u0027, {}))\nz.angularBind(\u0027status\u0027, \u0027Ready!\u0027)\nz.angularBind(\u0027step_count\u0027, 0)\nprint(\u0027Reset!\u0027)",
+      "user": "anonymous",
+      "dateUpdated": "2026-01-29 09:29:14.294",
+      "progress": 0,
+      "config": {
+        "colWidth": 4.0,
+        "fontSize": 9.0,
+        "editorHide": true,
+        "results": {},
+        "enabled": true,
+        "editorSetting": {}
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Reset!\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1769678949462_1591928357",
+      "id": "para_reset",
+      "dateCreated": "2026-01-29 09:29:09.462",
+      "dateStarted": "2026-01-29 09:29:14.296",
+      "dateFinished": "2026-01-29 09:29:14.342",
+      "status": "FINISHED"
+    }
+  ],
+  "name": "01_Labyrinth_Game",
+  "id": "2MGZ66S8A",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.10.0",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false
+  },
+  "info": {
+    "isRunning": false
+  }
+}

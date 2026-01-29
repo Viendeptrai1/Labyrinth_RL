@@ -210,11 +210,11 @@ class World:
         if collided:
             info['collisions'].append('wall')
         
-        # 5. Collision với board bounds
+        # 5. Collision với board bounds (tất cả 4 cạnh)
         new_position = self._clamp_to_board(new_position, ball_physics.radius)
         
         # 6. Update position
-        ball_transform.position = new_position
+        ball_transform.position = new_position.copy()
         
         # 7. Check triggers (holes, goal, teleports)
         trigger_info = self._check_triggers(ball_transform, ball_inventory)
@@ -282,11 +282,11 @@ class World:
         if collided:
             info['collisions'].append('wall')
         
-        # 5. Collision với board bounds
+        # 5. Collision với board bounds (tất cả 4 cạnh)
         new_position = self._clamp_to_board(new_position, ball_physics.radius)
         
         # 6. Update position
-        ball_transform.position = new_position
+        ball_transform.position = new_position.copy()
         
         # 7. Check triggers (holes, goal, teleports)
         trigger_info = self._check_triggers(ball_transform, ball_inventory)
@@ -370,14 +370,17 @@ class World:
         return new_pos, collided
     
     def _clamp_to_board(self, pos: np.ndarray, radius: float) -> np.ndarray:
-        """Giữ ball trong bounds của board (2D)"""
+        """Giữ ball trong bounds của board (2D) - tất cả 4 cạnh"""
         half_w = self.board_config.width / 2 - radius
         half_h = self.board_config.height / 2 - radius
         
-        pos[0] = np.clip(pos[0], -half_w, half_w)
-        pos[1] = np.clip(pos[1], -half_h, half_h)
+        # Clamp tất cả 4 hướng
+        clamped = np.array([
+            np.clip(pos[0], -half_w, half_w),
+            np.clip(pos[1], -half_h, half_h)
+        ], dtype=float)
         
-        return pos
+        return clamped
     
     def _check_triggers(
         self, 

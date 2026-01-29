@@ -323,11 +323,11 @@ def create_tutorial_level() -> LevelSpec:
         id='level_01_tutorial',
         name='Tutorial',
         difficulty=1,
-        board_width=8.0,
-        board_height=8.0,
-        ball_start=(-2.5, 0.0),
-        goal_position=(2.5, 0.0),
-        goal_radius=0.7,
+        board_width=12.0,
+        board_height=12.0,
+        ball_start=(-4.0, 0.0),
+        goal_position=(4.0, 0.0),
+        goal_radius=0.6,
         walls=[],  # No walls for tutorial
         description='Đưa bi vào lỗ xanh. Click board rồi dùng WASD để điều khiển.',
         hints=['Nhấn D hoặc phím phải để đẩy bi sang goal']
